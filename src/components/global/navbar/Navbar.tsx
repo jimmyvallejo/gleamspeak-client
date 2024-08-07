@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Center, Tooltip, UnstyledButton, Stack, rem } from '@mantine/core';
+import { useState, useContext } from "react";
+import { Center, Tooltip, UnstyledButton, Stack, rem } from "@mantine/core";
 import {
   IconHome2,
   IconGauge,
@@ -8,11 +8,14 @@ import {
   IconCalendarStats,
   IconUser,
   IconSettings,
-  IconLogout,
+  IconLogin,
   IconSwitchHorizontal,
-} from '@tabler/icons-react';
-import { MantineLogo } from '@mantinex/mantine-logo';
-import classes from './Navbar.module.css';
+  IconLogout,
+} from "@tabler/icons-react";
+import { MantineLogo } from "@mantinex/mantine-logo";
+import classes from "./Navbar.module.css";
+import { Link } from "react-router-dom";
+import { AuthContext } from "../../../contexts/AuthContext";
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
@@ -24,7 +27,11 @@ interface NavbarLinkProps {
 function NavbarLink({ icon: Icon, label, active, onClick }: NavbarLinkProps) {
   return (
     <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
-      <UnstyledButton onClick={onClick} className={classes.link} data-active={active || undefined}>
+      <UnstyledButton
+        onClick={onClick}
+        className={classes.link}
+        data-active={active || undefined}
+      >
         <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
       </UnstyledButton>
     </Tooltip>
@@ -32,17 +39,19 @@ function NavbarLink({ icon: Icon, label, active, onClick }: NavbarLinkProps) {
 }
 
 const mockdata = [
-  { icon: IconHome2, label: 'Home' },
-  { icon: IconGauge, label: 'Dashboard' },
-  { icon: IconDeviceDesktopAnalytics, label: 'Analytics' },
-  { icon: IconCalendarStats, label: 'Releases' },
-  { icon: IconUser, label: 'Account' },
-  { icon: IconFingerprint, label: 'Security' },
-  { icon: IconSettings, label: 'Settings' },
+  { icon: IconHome2, label: "Home" },
+  { icon: IconGauge, label: "Dashboard" },
+  { icon: IconDeviceDesktopAnalytics, label: "Analytics" },
+  { icon: IconCalendarStats, label: "Releases" },
+  { icon: IconUser, label: "Account" },
+  { icon: IconFingerprint, label: "Security" },
+  { icon: IconSettings, label: "Settings" },
 ];
 
 export function Navbar() {
   const [active, setActive] = useState(2);
+
+  const auth = useContext(AuthContext);
 
   const links = mockdata.map((link, index) => (
     <NavbarLink
@@ -67,7 +76,13 @@ export function Navbar() {
 
       <Stack justify="center" gap={0}>
         <NavbarLink icon={IconSwitchHorizontal} label="Change account" />
-        <NavbarLink icon={IconLogout} label="Logout" />
+        {!auth?.isAuthenticated ? (
+          <Link to={`/login`}>
+            <NavbarLink icon={IconLogin} label="Login" />
+          </Link>
+        ) : (
+          <NavbarLink onClick={auth.logout} icon={IconLogout} label="Logout" />
+        )}
       </Stack>
     </nav>
   );
