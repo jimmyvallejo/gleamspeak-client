@@ -13,7 +13,7 @@ import {
   IconLogout,
 } from "@tabler/icons-react";
 import { MantineLogo } from "@mantinex/mantine-logo";
-import classes from "./Navbar.module.css";
+import classes from "./Channel.module.css";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../../../contexts/AuthContext";
 
@@ -48,7 +48,7 @@ const mockdata = [
   { icon: IconSettings, label: "Settings" },
 ];
 
-export function Navbar() {
+export function Channels() {
   const [active, setActive] = useState(2);
 
   const auth = useContext(AuthContext);
