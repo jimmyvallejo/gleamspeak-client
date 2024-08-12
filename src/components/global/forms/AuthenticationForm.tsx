@@ -27,41 +27,99 @@ export function AuthenticationForm(props: PaperProps) {
     console.log("Context not loaded");
   }
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const [type, toggle] = useToggle(["login", "register"]);
+
   const form = useForm({
     initialValues: {
       email: "",
-      name: "",
+      handle: "",
       password: "",
       terms: false,
     },
     validate: {
-      email: (val: string) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
-      password: (val: string) =>
-        val.length <= 2
-          ? "Password should include at least 6 characters"
-          : null,
+      email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
+      handle: (val) => {
+        if (type === "register" && (!val || val.trim() === "")) {
+          return "Display name is required";
+        }
+        return null;
+      },
+      password: (val) =>
+        val.length < 3 ? "Password should include at least 3 characters" : null,
+      terms: (val) => {
+        if (type === "register" && !val) {
+          return "You must accept the terms and conditions";
+        }
+        return null;
+      },
     },
   });
 
   const loginMutation = useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) =>
-      auth?.loginStandard(email, password) ??
-      Promise.reject("Auth context not available"),
+    mutationFn: async ({
+      email,
+      password,
+    }: {
+      email: string;
+      password: string;
+    }) => {
+      if (!auth) throw new Error("Auth context not available");
+      await auth.loginStandard(email, password);
+    },
     onSuccess: () => {
       console.log("Login successful");
-      navigate("/home")
+      navigate("/");
     },
     onError: (error) => {
       console.error("Login failed:", error);
+      form.setErrors({ email: "Login failed. Please check your credentials." });
     },
   });
 
-  const handleSubmit = form.onSubmit((values) => {
+  const signupMutation = useMutation({
+    mutationFn: async ({
+      email,
+      handle,
+      password,
+    }: {
+      email: string;
+      handle: string;
+      password: string;
+    }) => {
+      if (!auth) throw new Error("Auth context not available");
+      await auth.createStandard(email, handle, password);
+    },
+    onSuccess: () => {
+      console.log("Creation and login successful");
+      navigate("/");
+    },
+    onError: (error) => {
+      console.error("Creation failed:", error);
+      form.setErrors({
+        email: "Creation failed. Please check your credentials.",
+      });
+    },
+  });
+
+  const handleLogin = form.onSubmit((values) => {
+    if (form.validate().hasErrors) {
+      return;
+    }
     loginMutation.mutate({
       email: values.email,
+      password: values.password,
+    });
+  });
+
+  const handleSignup = form.onSubmit((values) => {
+    if (form.validate().hasErrors) {
+      return;
+    }
+    signupMutation.mutate({
+      email: values.email,
+      handle: values.handle,
       password: values.password,
     });
   });
@@ -79,16 +137,18 @@ export function AuthenticationForm(props: PaperProps) {
 
       <Divider label="Or continue with email" labelPosition="center" my="lg" />
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={type === "login" ? handleLogin : handleSignup}>
         <Stack>
           {type === "register" && (
             <TextInput
-              label="Name"
-              placeholder="Your name"
-              value={form.values.name}
+              required
+              label="Display Name"
+              placeholder="Your Display name"
+              value={form.values.handle}
               onChange={(event) =>
-                form.setFieldValue("name", event.currentTarget.value)
+                form.setFieldValue("handle", event.currentTarget.value)
               }
+              error={form.errors.handle}
               radius="md"
             />
           )}
@@ -127,6 +187,7 @@ export function AuthenticationForm(props: PaperProps) {
               onChange={(event) =>
                 form.setFieldValue("terms", event.currentTarget.checked)
               }
+              error={form.errors.terms}
             />
           )}
         </Stack>

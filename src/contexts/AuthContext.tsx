@@ -6,6 +6,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   user: string | null;
   loginStandard: (email: string, password: string) => Promise<void>;
+  createStandard: (email: string, handle: string, password: string) => Promise<void>;
   checkAuthStatus: () => Promise<void>;
   logout: () => void;
 };
@@ -16,23 +17,49 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<string | null>(null);
 
-  const api = useApi()
+  const api = useApi();
 
   const navigate = useNavigate();
 
-  const loginStandard = async (email: string, password: string): Promise<void> => {
+  const loginStandard = async (
+    email: string,
+    password: string
+  ): Promise<void> => {
     const data = {
       email: email,
       password: password,
     };
-  
+
     try {
       const response = await api.post(`/v1/login`, data);
       if (response.status === 200) {
         await checkAuthStatus();
+      } else {
+        throw new Error("Login failed");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Login error:", error);
+      throw error;
+    }
+  };
+
+  const createStandard = async (
+    email: string,
+    handle: string,
+    password: string
+  ): Promise<void> => {
+    const data = { email, handle, password };
+
+    try {
+      const response = await api.post(`/v1/users`, data);
+      if (response.status === 201) {
+        await loginStandard(email, password);
+      } else {
+        throw new Error("User creation failed");
+      }
+    } catch (error) {
+      console.error("User creation error:", error);
+      throw error;
     }
   };
 
@@ -61,14 +88,15 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    console.log(user)
-    console.log(isAuthenticated)
-  },[user])
+    console.log(user);
+    console.log(isAuthenticated);
+  }, [user]);
 
   const contextValue: AuthContextType = {
     isAuthenticated,
     user,
     loginStandard,
+    createStandard,
     checkAuthStatus,
     logout,
   };

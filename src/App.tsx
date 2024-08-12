@@ -5,6 +5,7 @@ import { useEffect, useContext } from "react";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import Servers from "./pages/Servers";
 import ProtectedIn from "./components/global/routes/ProtectedIn";
 import { AuthContext } from "./contexts/AuthContext";
 import { Channels } from "./components/global/navbars/Channels";
@@ -33,12 +34,22 @@ function App() {
             <Route
               element={
                 <ProtectedIn
+                  isAuthenticated={!auth?.isAuthenticated}
+                  redirectPath="/auth"
+                />
+              }
+            >
+              <Route path="/servers" element={<Servers />} />
+            </Route>
+            <Route
+              element={
+                <ProtectedIn
                   isAuthenticated={auth?.isAuthenticated}
                   redirectPath="/"
                 />
               }
             >
-              <Route path="/login" element={<Login />} />
+              <Route path="/auth" element={<Login />} />
             </Route>
           </Routes>
         </div>

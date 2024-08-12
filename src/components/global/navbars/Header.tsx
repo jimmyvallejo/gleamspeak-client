@@ -39,7 +39,12 @@ export function HeaderSimple() {
   return (
     <header className={classes.header}>
       <Container size="full" className={classes.inner}>
-        <MantineLogo size={28} />
+        <Link
+          to="/"
+          style={{ color: "white" }}
+        >
+          <MantineLogo size={28} color="white" />
+        </Link>
         <Group gap={5} visibleFrom="xs">
           {items}
           {!auth?.isAuthenticated ? (
