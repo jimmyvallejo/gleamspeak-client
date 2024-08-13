@@ -1,83 +1,92 @@
 import { useContext } from "react";
-import {
-  Center,
-  Tooltip,
-  UnstyledButton,
-  Stack,
-  rem,
-} from "@mantine/core";
+import { Center, Tooltip, UnstyledButton, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconHome2,
-  IconGauge,
-  IconDeviceDesktopAnalytics,
-  IconFingerprint,
-  IconCalendarStats,
-  IconUser,
-  IconSettings,
-  IconLogin,
-  IconSwitchHorizontal,
-  IconLogout,
-  IconPlus,
-} from "@tabler/icons-react";
+import { IconHome2, IconUser, IconPlus } from "@tabler/icons-react";
 import { MantineLogo } from "@mantinex/mantine-logo";
 import classes from "./Channel.module.css";
-import { useNavigate, useLocation } from "react-router-dom";
+
 import { AuthContext } from "../../../contexts/AuthContext";
 import { CreateServerModal } from "../modals/CreateServerModal";
+import { useApi } from "../../../hooks/useApi";
+import { useQuery } from "@tanstack/react-query";
 
 interface NavbarLinkProps {
   icon: typeof IconHome2;
   label: string;
-  link: string;
   onClick?(): void;
 }
 
-function NavbarLink({ icon: Icon, label, link, onClick }: NavbarLinkProps) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isActive = location.pathname === link;
+type Server = {
+  server_id: string;
+  server_name: string;
+  description: string;
+  icon_url: string;
+  banner_url: string;
+  is_public: boolean;
+  member_count: number;
+  server_level: number;
+  max_members: number;
+  server_created_at: string;
+  server_updated_at: string;
+};
 
-  const handleClick = () => {
-    if (onClick) {
-      onClick();
-    } else {
-      navigate(link);
-    }
-  };
-
+function Server({ icon: Icon, label, onClick }: NavbarLinkProps) {
   return (
     <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
-      <UnstyledButton
-        onClick={handleClick}
-        className={classes.link}
-        data-active={isActive || undefined}
-      >
+      <UnstyledButton onClick={onClick} className={classes.link}>
         <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
       </UnstyledButton>
     </Tooltip>
   );
 }
 
-const mockdata = [
-  { icon: IconHome2, label: "Home", link: "/" },
-  { icon: IconGauge, label: "Servers", link: "/servers" },
-  { icon: IconDeviceDesktopAnalytics, label: "Analytics", link: "/analytics" },
-  { icon: IconCalendarStats, label: "Releases", link: "/releases" },
-  { icon: IconUser, label: "Account", link: "/account" },
-  { icon: IconFingerprint, label: "Security", link: "/security" },
-  { icon: IconSettings, label: "Settings", link: "/settings" },
-];
-
 export function Channels() {
   const auth = useContext(AuthContext);
-  const navigate = useNavigate();
-
   const [opened, { open, close }] = useDisclosure(false);
+  const api = useApi();
 
-  const links = mockdata.map((link) => (
-    <NavbarLink {...link} key={link.label} />
-  ));
+  const fetchUserServers = async () => {
+    try {
+      const response = await api.get("/v1/servers/user/many");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching user servers:", error);
+      throw error;
+    }
+  };
+
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["userServers"],
+    queryFn: fetchUserServers,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    enabled: !!auth?.user,
+  });
+
+  console.log("Servers:", data);
+
+  let content;
+  if (isLoading) {
+    content = <div>Loading...</div>;
+  } else if (isError) {
+    content = <div>Error: {(error as Error).message}</div>;
+  } else if (data?.servers) {
+    content = (
+      <Stack justify="center" gap={0}>
+        {data.servers.map((server: Server) => (
+          <Server
+            key={server.server_id}
+            icon={IconUser}
+            label={server.server_name}
+          />
+        ))}
+      </Stack>
+    );
+  } else {
+    content = <div>No servers found</div>;
+  }
 
   return (
     <>
@@ -88,38 +97,10 @@ export function Channels() {
 
         <div className={classes.navbarMain}>
           <div className="mb-4">
-            <NavbarLink
-              icon={IconPlus}
-              label="Create Server"
-              link=""
-              onClick={open}
-            />
+            <Server icon={IconPlus} label="Create Server" onClick={open} />
           </div>
-          <Stack justify="center" gap={0}>
-            {links}
-          </Stack>
+          {content}
         </div>
-
-        <Stack justify="center" gap={0}>
-          <NavbarLink
-            icon={IconSwitchHorizontal}
-            label="Change account"
-            link="/change-account"
-          />
-          {!auth?.isAuthenticated ? (
-            <NavbarLink icon={IconLogin} label="Sign Up/Login" link="/auth" />
-          ) : (
-            <NavbarLink
-              onClick={() => {
-                auth.logout();
-                navigate("/");
-              }}
-              icon={IconLogout}
-              label="Logout"
-              link="/"
-            />
-          )}
-        </Stack>
       </nav>
       <CreateServerModal opened={opened} onClose={close} />
     </>

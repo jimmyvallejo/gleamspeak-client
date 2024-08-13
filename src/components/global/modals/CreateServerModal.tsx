@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { useContext } from "react";
 import { AuthContext } from "../../../contexts/AuthContext";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "../../../hooks/useApi";
 import { notifications } from "@mantine/notifications";
 
@@ -24,6 +24,7 @@ interface CreateServerModalProps {
 export function CreateServerModal({ opened, onClose }: CreateServerModalProps) {
   const auth = useContext(AuthContext);
   const api = useApi();
+  const queryClient = useQueryClient();
 
   if (!auth) {
     console.log("Context not loaded");
@@ -54,12 +55,13 @@ export function CreateServerModal({ opened, onClose }: CreateServerModalProps) {
     },
     onSuccess: (response) => {
       console.log("Server creation successful:", response);
-      form.reset()
+      form.reset();
       onClose();
       notifications.show({
         message: "Server Creation Successful",
         color: "green",
       });
+      queryClient.invalidateQueries({ queryKey: ["userServers"] });
     },
     onError: (error: Error) => {
       console.error("Server creation failed:", error);
