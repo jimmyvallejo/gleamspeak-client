@@ -1,18 +1,13 @@
 .navbar {
-    width: rem(250px);
+    width: rem(80px);
+    padding: var(--mantine-spacing-md);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    border-right: rem(1px) solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
-    background-color: #2e2e2e;
   }
   
   .navbarMain {
     flex: 1;
-    width: 85%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    margin-top: rem(50px);
   }
   
   .link {

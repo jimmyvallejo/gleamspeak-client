@@ -48,7 +48,7 @@ export function HeaderSimple() {
         <Group gap={5} visibleFrom="xs">
           {items}
           {!auth?.isAuthenticated ? (
-            <Link to={`/login`}>
+            <Link to={`/auth`}>
               <NavbarLink icon={IconLogin} label="Login" />
             </Link>
           ) : (

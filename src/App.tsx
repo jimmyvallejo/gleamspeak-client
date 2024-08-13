@@ -5,9 +5,9 @@ import { useEffect, useContext } from "react";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Servers from "./pages/Servers";
 import ProtectedIn from "./components/global/routes/ProtectedIn";
 import { AuthContext } from "./contexts/AuthContext";
+import { Servers } from "./components/global/navbars/Servers";
 import { Channels } from "./components/global/navbars/Channels";
 import { HeaderSimple } from "./components/global/navbars/Header";
 
@@ -27,6 +27,7 @@ function App() {
     <div className="App">
       <HeaderSimple />
       <div className="main-container">
+        <Servers />
         <Channels />
         <div className="content">
           <Routes>
