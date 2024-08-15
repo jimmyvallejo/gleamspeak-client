@@ -1,19 +1,14 @@
-import {
-  Accordion,
-  Center,
-  UnstyledButton,
-  rem,
-  Divider,
-} from "@mantine/core";
+import { Accordion, Center, UnstyledButton, rem, Divider } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconHome2, IconPlus } from "@tabler/icons-react";
 import classes from "./Channel.module.css";
-// import { AuthContext } from "../../../contexts/AuthContext";
+import { AuthContext } from "../../../contexts/AuthContext";
 import { ServerContext } from "../../../contexts/ServerContext";
-import { CreateServerModal } from "../modals/CreateServerModal";
-import { useContext } from "react";
-// import { useApi } from "../../../hooks/useApi";
-// import { useQuery } from "@tanstack/react-query";
+import { useContext, useState } from "react";
+import { CreateTextChannel } from "../modals/CreateTextChannelModa";
+import { useApi } from "../../../hooks/useApi";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
 interface NavbarChannelProps {
   icon: typeof IconHome2;
@@ -23,18 +18,16 @@ interface NavbarChannelProps {
   active?: boolean;
 }
 
-type Server = {
+type channel = {
+  channel_id: string;
+  owner_id: string;
   server_id: string;
-  server_name: string;
-  description: string;
-  icon_url: string;
-  banner_url: string;
-  is_public: boolean;
-  member_count: number;
-  server_level: number;
-  max_members: number;
-  server_created_at: string;
-  server_updated_at: string;
+  language_id: string;
+  channel_name: string;
+  last_active: string;
+  is_locked: boolean;
+  channel_created_at: string;
+  channel_updated_at: string;
 };
 
 const channels = [
@@ -60,89 +53,100 @@ const channels = [
 
 function Server({ icon: Icon, onClick, active }: NavbarChannelProps) {
   return (
-   
-      <UnstyledButton
-        onClick={onClick}
-        className={classes.link}
-        data-active={active || undefined}
-      >
-        <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
-      </UnstyledButton>
-
+    <UnstyledButton
+      onClick={onClick}
+      className={classes.link}
+      data-active={active || undefined}
+    >
+      <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
+    </UnstyledButton>
   );
 }
 
 export function Channels() {
-  //   const auth = useContext(AuthContext);
+  const auth = useContext(AuthContext);
   const servers = useContext(ServerContext);
   const [opened, { open, close }] = useDisclosure(false);
-  //   const [active, setActive] = useState(0);
+  const [active, setActive] = useState<number | null>(null);
 
-  //   const api = useApi();
+  const api = useApi();
 
-  //   const fetchUserServers = async () => {
-  //     try {
-  //       const response = await api.get("/v1/servers/user/many");
-  //       return response.data;
-  //     } catch (error) {
-  //       console.error("Error fetching user servers:", error);
-  //       throw error;
-  //     }
-  //   };
+  const fetchUserTextChannels = async () => {
+    try {
+      const response = await api.get(`/v1/channels/${servers?.serverID}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching user servers:", error);
+      throw error;
+    }
+  };
 
-  //   const { data, isLoading, isError, error } = useQuery({
-  //     queryKey: ["userServers"],
-  //     queryFn: fetchUserServers,
-  //     staleTime: Infinity,
-  //     gcTime: Infinity,
-  //     retry: 3,
-  //     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-  //     enabled: !!auth?.user,
-  //   });
+  const { data, error } = useQuery({
+    queryKey: ["userTextChannels", servers?.serverID],
+    queryFn: fetchUserTextChannels,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    enabled: !!auth?.user && !!servers?.serverID,
+  });
 
-  //   useEffect(() => {
-  //     if (data?.servers.length > 0) {
-  //       servers?.setServerID(data.servers[0].server_id);
-  //     }
-  //   }, [data]);
-
-  //   let content;
-  //   if (isLoading) {
-  //     content = <div className="text-center text-sm">Loading...</div>;
-  //   } else if (isError) {
-  //     content = (
-  //       <div className="text-center text-sm">
-  //         Error: {(error as Error).message}
-  //       </div>
-  //     );
-  //   } else if (data?.servers) {
-  //     content = (
-  //       <Stack justify="center" gap={0}>
-  //         {data.servers.map((server: Server, index: number) => (
-  //           <Server
-  //             key={server.server_id}
-  //             icon={IconUser}
-  //             label={server.server_name}
-  //             serverID={server.server_id}
-  //             active={index === active}
-  //             onClick={() => {
-  //               servers?.setServerID(server.server_id);
-  //               setActive(index);
-  //             }}
-  //           />
-  //         ))}
-  //       </Stack>
-  //     );
-  //   } else {
-  //     content = <div className="text-center text-sm">No servers found</div>;
-  //   }
-
-  const items = channels.map((item) => (
-    <Accordion.Item key={item.value} value={item.value}>
-      <Accordion.Control icon={item.emoji}>{item.value}</Accordion.Control>
-      <Accordion.Panel>{item.description}</Accordion.Panel>
+  const TextChannels = (
+    <Accordion.Item
+      className="w-full"
+      key={channels[0].value}
+      value={channels[0].value}
+    >
+      <Accordion.Control icon={channels[0].emoji}>
+        {channels[0].value}
+      </Accordion.Control>
+      <Accordion.Panel className="w-full">
+        {data?.channels.map((channel: channel, index: number) => (
+          <Link
+            key={channel.channel_id}
+            className="no-underline text-inherit w-full"
+            to={`/chat/${channel.channel_id}`}
+          >
+            <div
+              onClick={() => setActive(index)}
+              className={`rounded-md ${active === index ? "bg-[#262626]" : ""}`}
+            >
+              <p className="text-[17px] px-4 py-1">
+                {" "}
+                # {channel.channel_name.slice(0, 15)}
+              </p>
+            </div>
+          </Link>
+        ))}
+        {error && <p className="text-red-300">Text channels failed to load</p>}
+      </Accordion.Panel>
     </Accordion.Item>
-  ));
+  );
+  const VoiceChannels = (
+    <Accordion.Item key={channels[1].value} value={channels[1].value}>
+      <Accordion.Control icon={channels[1].emoji}>
+        {channels[1].value}
+      </Accordion.Control>
+      <Accordion.Panel>
+        {data?.channels.map((channel: channel) => (
+          <p key={channel.channel_id}>{channel.channel_name}</p>
+        ))}
+      </Accordion.Panel>
+    </Accordion.Item>
+  );
+
+  const VideoChannels = (
+    <Accordion.Item key={channels[2].value} value={channels[2].value}>
+      <Accordion.Control icon={channels[2].emoji}>
+        {channels[2].value}
+      </Accordion.Control>
+      <Accordion.Panel>
+        {data?.channels.map((channel: channel) => (
+          <p key={channel.channel_id}>{channel.channel_name}</p>
+        ))}
+      </Accordion.Panel>
+    </Accordion.Item>
+  );
 
   return (
     <>
@@ -162,10 +166,18 @@ export function Channels() {
             />
             <h5 className="ml-1">Create Text Channel</h5>
           </div>
-          <Accordion variant="seperated" defaultValue="Text" className="w-full">{items}</Accordion>
+          <Accordion variant="seperated" defaultValue="Text" className="w-full">
+            {TextChannels}
+            {VoiceChannels}
+            {VideoChannels}
+          </Accordion>
         </div>
       </nav>
-      <CreateServerModal opened={opened} onClose={close} />
+      <CreateTextChannel
+        serverID={servers?.serverID}
+        opened={opened}
+        onClose={close}
+      />
     </>
   );
 }

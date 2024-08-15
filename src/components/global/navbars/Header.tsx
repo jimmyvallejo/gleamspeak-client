@@ -1,7 +1,6 @@
 import { useState, useContext } from "react";
 import { Container, Group, Burger } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { MantineLogo } from "@mantinex/mantine-logo";
 import classes from "./Header.module.css";
 import { NavbarLink } from "../buttons/NavbarLink";
 import { AuthContext } from "../../../contexts/AuthContext";
@@ -41,9 +40,9 @@ export function HeaderSimple() {
       <Container size="full" className={classes.inner}>
         <Link
           to="/"
-          style={{ color: "white" }}
+          className="no-underline text-inherit"
         >
-          <MantineLogo size={28} color="white" />
+          <h3 className="text-lg no-underline">gleamspeak</h3>
         </Link>
         <Group gap={5} visibleFrom="xs">
           {items}

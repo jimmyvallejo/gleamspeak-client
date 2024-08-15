@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import ProtectedIn from "./components/global/routes/ProtectedIn";
 import { AuthContext } from "./contexts/AuthContext";
 import { Servers } from "./components/global/navbars/Servers";
+import { Chat } from "./pages/Chat";
 import { Channels } from "./components/global/navbars/Channels";
 import { HeaderSimple } from "./components/global/navbars/Header";
 
@@ -40,7 +41,7 @@ function App() {
                 />
               }
             >
-              <Route path="/servers" element={<Servers />} />
+             <Route path="/chat/:channelId" element={<Chat />} />
             </Route>
             <Route
               element={
