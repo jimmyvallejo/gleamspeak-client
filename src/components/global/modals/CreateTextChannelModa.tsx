@@ -17,6 +17,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useApi } from "../../../hooks/useApi";
 import { notifications } from "@mantine/notifications";
 import { languages } from "../../../constants/constants";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CreateTextChannelModalProps {
   opened: boolean;
@@ -33,9 +34,7 @@ export function CreateTextChannel({
   const api = useApi();
   //   const queryClient = useQueryClient();
 
-  if (!auth) {
-    console.log("Context not loaded");
-  }
+  const queryClient = useQueryClient();
 
   const form = useForm({
     initialValues: {
@@ -74,12 +73,12 @@ export function CreateTextChannel({
     onSuccess: (response) => {
       console.log("Channel creation successful:", response);
       form.reset();
+      queryClient.invalidateQueries({ queryKey: ["userTextChannels"] });
       onClose();
       notifications.show({
         message: "Channel Creation Successful",
         color: "green",
       });
-      //   queryClient.invalidateQueries({ queryKey: ["userServers"] });
     },
     onError: (error: Error) => {
       console.error("Channel creation failed:", error);

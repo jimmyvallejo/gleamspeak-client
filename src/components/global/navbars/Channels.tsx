@@ -4,11 +4,13 @@ import { IconHome2, IconPlus } from "@tabler/icons-react";
 import classes from "./Channel.module.css";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { ServerContext } from "../../../contexts/ServerContext";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { CreateTextChannel } from "../modals/CreateTextChannelModa";
 import { useApi } from "../../../hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { useWebSocket } from "../../../hooks/useWebsocket";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface NavbarChannelProps {
   icon: typeof IconHome2;
@@ -70,6 +72,9 @@ export function Channels() {
   const [active, setActive] = useState<number | null>(null);
 
   const api = useApi();
+  const ws = useWebSocket();
+
+  const queryClient = useQueryClient();
 
   const fetchUserTextChannels = async () => {
     try {
@@ -81,6 +86,12 @@ export function Channels() {
     }
   };
 
+  const handleChannel = (index: number, id: string) => {
+    setActive(index);
+    queryClient.invalidateQueries({ queryKey: ["channelMessages"] });
+    ws.setTextRoom(id);
+  };
+
   const { data, error } = useQuery({
     queryKey: ["userTextChannels", servers?.serverID],
     queryFn: fetchUserTextChannels,
@@ -90,6 +101,10 @@ export function Channels() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     enabled: !!auth?.user && !!servers?.serverID,
   });
+
+  useEffect(() => {
+    setActive(null)
+  },[servers?.serverID])
 
   const TextChannels = (
     <Accordion.Item
@@ -108,7 +123,7 @@ export function Channels() {
             to={`/chat/${channel.channel_id}`}
           >
             <div
-              onClick={() => setActive(index)}
+              onClick={() => handleChannel(index, channel.channel_id)}
               className={`rounded-md ${active === index ? "bg-[#262626]" : ""}`}
             >
               <p className="text-[17px] px-4 py-1">

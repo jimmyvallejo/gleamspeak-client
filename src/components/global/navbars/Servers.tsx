@@ -9,6 +9,7 @@ import { ServerContext } from "../../../contexts/ServerContext";
 import { CreateServerModal } from "../modals/CreateServerModal";
 import { useApi } from "../../../hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
+import { useWebSocket } from "../../../hooks/useWebsocket";
 
 interface NavbarServerProps {
   icon: typeof IconHome2;
@@ -52,6 +53,10 @@ export function Servers() {
   const [opened, { open, close }] = useDisclosure(false);
   const [active, setActive] = useState(0);
 
+  const ws = useWebSocket();
+
+  const { setChannelMessages } = ws;
+
   const api = useApi();
 
   const fetchUserServers = async () => {
@@ -74,11 +79,18 @@ export function Servers() {
     enabled: !!auth?.user,
   });
 
+  const handleServerChange = (server: Server, index: number) => {
+    servers?.setServerID(server.server_id);
+    servers?.setServerName(server.server_name);
+    setActive(index);
+    setChannelMessages([]);
+  };
+
   useEffect(() => {
     if (data?.servers.length > 0) {
       servers?.setServerID(data.servers[0].server_id);
-      servers?.setServerName(data.servers[0].server_name)
-      console.log(data)
+      servers?.setServerName(data.servers[0].server_name);
+      console.log(data);
     }
   }, [data]);
 
@@ -102,9 +114,7 @@ export function Servers() {
             serverID={server.server_id}
             active={index === active}
             onClick={() => {
-              servers?.setServerID(server.server_id);
-              servers?.setServerName(server.server_name);
-              setActive(index);
+              handleServerChange(server, index);
             }}
           />
         ))}
@@ -114,9 +124,11 @@ export function Servers() {
     content = <div className="text-center text-sm">No servers found</div>;
   }
 
+  const borderClass = data?.length === 0 ? "border-r border-r-gray-300" : "";
+
   return (
     <>
-      <nav className={classes.navbar}>
+      <nav className={`${classes.navbar} ${borderClass}`}>
         <div className={classes.navbarMain}>
           <div className="mb-4">
             <Server

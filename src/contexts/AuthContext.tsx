@@ -2,11 +2,21 @@ import { createContext, useState, useEffect, ReactNode, FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
 
+type user = {
+  id: string;
+  handle: string;
+  email: string;
+};
+
 type AuthContextType = {
   isAuthenticated: boolean;
-  user: string | null;
+  user: user | null;
   loginStandard: (email: string, password: string) => Promise<void>;
-  createStandard: (email: string, handle: string, password: string) => Promise<void>;
+  createStandard: (
+    email: string,
+    handle: string,
+    password: string
+  ) => Promise<void>;
   checkAuthStatus: () => Promise<void>;
   logout: () => void;
 };
@@ -15,7 +25,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<string | null>(null);
+  const [user, setUser] = useState<user | null>(null);
 
   const api = useApi();
 
@@ -78,7 +88,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   };
   const logout = () => {
     api.post(`/v1/logout`);
-    navigate("/login");
+    navigate("/auth");
     setIsAuthenticated(false);
     setUser(null);
   };
