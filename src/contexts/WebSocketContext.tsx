@@ -16,6 +16,7 @@ import {
   ChangeChatRoomEvent,
 } from "./WebSocketEvents";
 
+
 interface EventPayload {
   [key: string]: any;
 }
@@ -54,8 +55,6 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     if (auth?.user) {
       const connectWebSocket = () => {
         setConnectionError(null);
-
-        // Use secure WebSocket if the page is served over HTTPS
         const ws = new WebSocket("ws://localhost:8080/ws");
 
         ws.onopen = () => {
@@ -103,7 +102,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     }
   }, [auth?.user]);
 
-  function routeEvent(event: Event<EventPayload>) {
+  const routeEvent = (event: Event<EventPayload>) => {
     if (event.type === undefined) {
       console.error("No type field in the event");
       return;
@@ -125,7 +124,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     }
   }
 
-  function handleNewMessage(payload: EventPayload) {
+  const handleNewMessage = (payload: EventPayload) => {
     console.log("New message:", payload);
     setChannelMessages((prevMessages) => [...prevMessages, payload]);
   }
@@ -157,8 +156,9 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
         textRoom,
         image
       );
-
+      if (textRoom){
       sendEvent("send_message", outgoingEvent);
+      } 
     } else {
       console.error("WebSocket is not connected or invalid user/message");
     }

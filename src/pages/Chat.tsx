@@ -39,7 +39,7 @@ export function Chat() {
     }
   };
 
-  const { data, isLoading, isError, error, refetch} = useQuery({
+  const { data, isLoading, isError, error,} = useQuery({
     queryKey: ["channelMessages", textRoom],
     queryFn: fetchChannelMessages,
     retry: 3,
@@ -54,11 +54,6 @@ export function Chat() {
     }
   }, [data, setChannelMessages]);
 
-  useEffect(() => {
-    if (textRoom){
-      refetch()
-    }
-  },[])
 
   const handleSend = () => {
     console.log(auth?.user, newMessage);

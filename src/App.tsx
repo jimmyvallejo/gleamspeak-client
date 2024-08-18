@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { useMantineColorScheme } from "@mantine/core";
 import { useEffect, useContext } from "react";
 
-import Home from "./pages/Home";
+import { Home } from "./pages/Home";
 import Login from "./pages/Login";
 import ProtectedIn from "./components/global/routes/ProtectedIn";
 import { AuthContext } from "./contexts/AuthContext";
