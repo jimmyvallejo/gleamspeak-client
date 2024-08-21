@@ -11,6 +11,9 @@ import {
 } from "@mantine/core";
 import { IconGauge, IconUser, IconCookie } from "@tabler/icons-react";
 import classes from "./Home.module.css";
+import { RecentServerCarousel } from "../components/global/carousels/RecentServers";
+import { AuthContext } from "../contexts/AuthContext";
+import { useContext } from "react";
 
 const mockdata = [
   {
@@ -35,6 +38,9 @@ const mockdata = [
 
 export const Home = () => {
   const theme = useMantineTheme();
+  const auth = useContext(AuthContext)
+
+  
   const features = mockdata.map((feature) => (
     <Card
       key={feature.title}
@@ -58,8 +64,17 @@ export const Home = () => {
   ));
 
   return (
-    <Container className="flex justify-center flex-col items-center" size="lg" py="xl">
-      <Group justify="center">
+    <Container
+      className="flex flex-col items-center justify-center overflow-y-auto"
+      py="xl"
+      px="xl"
+       size={"90%"}
+      style={{
+        width: auth?.user ? '80vw' : '90vw',
+        height: '90vh' 
+      }}
+    >
+      <Group justify="center" className="">
         <Badge variant="filled" size="lg">
           gleamspeak
         </Badge>
@@ -77,6 +92,10 @@ export const Home = () => {
       <SimpleGrid cols={{ base: 1, md: 3 }} spacing="xl" mt={50}>
         {features}
       </SimpleGrid>
+      <Title order={2} className={classes.title} ta="center" mt="xl" mb="xl">
+        Explore recently created servers
+      </Title>
+      <RecentServerCarousel />
     </Container>
   );
 };

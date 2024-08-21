@@ -10,7 +10,8 @@ import { WebSocketProvider } from "./contexts/WebSocketContext.tsx";
 import App from "./App.tsx";
 import "./App.css";
 import "@mantine/core/styles.css";
-import "@mantine/notifications/styles.css"; // Add this line
+import "@mantine/notifications/styles.css"; 
+import '@mantine/carousel/styles.css';
 
 const queryClient = new QueryClient();
 

@@ -51,7 +51,7 @@ export function Servers() {
   const auth = useContext(AuthContext);
   const servers = useContext(ServerContext);
   const [opened, { open, close }] = useDisclosure(false);
-  const [active, setActive] = useState(0);
+
 
   const ws = useWebSocket();
 
@@ -70,29 +70,22 @@ export function Servers() {
   };
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["userServers"],
+    queryKey: ["userServers", auth?.user?.id],
     queryFn: fetchUserServers,
-    staleTime: Infinity,
-    gcTime: Infinity,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, 
     enabled: !!auth?.user,
   });
 
-  const handleServerChange = (server: Server, index: number) => {
+  const handleServerChange = (server: Server,) => {
     servers?.setServerID(server.server_id);
     servers?.setServerName(server.server_name);
-    setActive(index);
+
     setChannelMessages([]);
   };
 
-  useEffect(() => {
-    if (data?.servers.length > 0) {
-      servers?.setServerID(data.servers[0].server_id);
-      servers?.setServerName(data.servers[0].server_name);
-      console.log(data);
-    }
-  }, [data]);
+
 
   let content;
   if (isLoading) {
@@ -106,15 +99,15 @@ export function Servers() {
   } else if (data?.servers) {
     content = (
       <Stack justify="center" gap={0}>
-        {data.servers.map((server: Server, index: number) => (
+        {data.servers.map((server: Server,) => (
           <Server
             key={server.server_id}
             icon={IconUser}
             label={server.server_name}
             serverID={server.server_id}
-            active={index === active}
+            active={servers?.serverID === server.server_id}
             onClick={() => {
-              handleServerChange(server, index);
+              handleServerChange(server);
             }}
           />
         ))}

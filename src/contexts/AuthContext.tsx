@@ -2,7 +2,7 @@ import { createContext, useState, useEffect, ReactNode, FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
 
-type user = {
+export type user = {
   id: string;
   handle: string;
   email: string;
@@ -99,7 +99,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     console.log(user);
-    console.log(isAuthenticated);
   }, [user]);
 
   const contextValue: AuthContextType = {
