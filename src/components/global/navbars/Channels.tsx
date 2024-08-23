@@ -1,6 +1,14 @@
-import { Accordion, Center, UnstyledButton, rem, Divider } from "@mantine/core";
+import {
+  Accordion,
+  Center,
+  UnstyledButton,
+  rem,
+  Divider,
+  Text,
+  Group,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconHome2, IconPlus } from "@tabler/icons-react";
+import { IconHome2, IconPlus, IconCopy } from "@tabler/icons-react";
 import classes from "./Channel.module.css";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { ServerContext } from "../../../contexts/ServerContext";
@@ -11,6 +19,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useWebSocket } from "../../../hooks/useWebsocket";
 import { useQueryClient } from "@tanstack/react-query";
+import { copyToClipboard } from "../../../utils/copy";
+import { notifications } from "@mantine/notifications";
 
 interface NavbarChannelProps {
   icon: typeof IconHome2;
@@ -86,12 +96,6 @@ export function Channels() {
     }
   };
 
-  const handleChannel = (index: number, id: string) => {
-    setActive(index);
-    queryClient.invalidateQueries({ queryKey: ["channelMessages"] });
-    ws.setTextRoom(id);
-  };
-
   const { data, error } = useQuery({
     queryKey: ["userTextChannels", servers?.serverID],
     queryFn: fetchUserTextChannels,
@@ -102,9 +106,25 @@ export function Channels() {
     enabled: !!auth?.user && !!servers?.serverID,
   });
 
+  const handleChannel = (index: number, id: string) => {
+    setActive(index);
+    queryClient.invalidateQueries({ queryKey: ["channelMessages"] });
+    ws.setTextRoom(id);
+  };
+
+  const handleCopy = () => {
+    if (servers?.serverCode) {
+      copyToClipboard(servers.serverCode);
+      notifications.show({
+        message: "Copied to clipboard",
+        color: "green",
+      });
+    }
+  };
+
   useEffect(() => {
-    setActive(null)
-  },[servers?.serverID])
+    setActive(null);
+  }, [servers?.serverID]);
 
   const TextChannels = (
     <Accordion.Item
@@ -166,8 +186,16 @@ export function Channels() {
   return (
     <>
       <nav className={classes.navbar}>
-        <Center>
+        <Center className="flex flex-col items-center">
           <h3>{`Server: ${servers?.serverName}`}</h3>
+          <Group>
+            <Text>{`Code: ${servers?.serverCode}`}</Text>
+            <IconCopy
+              size="1.2rem"
+              className="cursor-pointer hover:text-blue-500 active:text-blue-700 transition-colors"
+              onClick={handleCopy}
+            />
+          </Group>
         </Center>
 
         <div className={classes.navbarMain}>

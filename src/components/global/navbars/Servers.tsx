@@ -1,15 +1,23 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { Tooltip, UnstyledButton, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconHome2, IconUser, IconPlus } from "@tabler/icons-react";
+import {
+  IconHome2,
+  IconUser,
+  IconPlus,
+  IconDoorEnter,
+  IconSettings,
+} from "@tabler/icons-react";
 
 import classes from "./Server.module.css";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { ServerContext } from "../../../contexts/ServerContext";
 import { CreateServerModal } from "../modals/CreateServerModal";
+import { JoinServerModal } from "../modals/JoinServerModal";
 import { useApi } from "../../../hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
 import { useWebSocket } from "../../../hooks/useWebsocket";
+import { useNavigate } from "react-router-dom";
 
 interface NavbarServerProps {
   icon: typeof IconHome2;
@@ -27,13 +35,14 @@ type Server = {
   banner_url: string;
   is_public: boolean;
   member_count: number;
+  invite_code: string;
   server_level: number;
   max_members: number;
   server_created_at: string;
   server_updated_at: string;
 };
 
-function Server({ icon: Icon, label, onClick, active }: NavbarServerProps) {
+function ServerItem({ icon: Icon, label, onClick, active }: NavbarServerProps) {
   return (
     <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
       <UnstyledButton
@@ -50,8 +59,15 @@ function Server({ icon: Icon, label, onClick, active }: NavbarServerProps) {
 export function Servers() {
   const auth = useContext(AuthContext);
   const servers = useContext(ServerContext);
-  const [opened, { open, close }] = useDisclosure(false);
+  const navigate = useNavigate();
 
+  const [
+    createServerOpened,
+    { open: openCreateServer, close: closeCreateServer },
+  ] = useDisclosure(false);
+
+  const [joinServerOpened, { open: openJoinServer, close: closeJoinServer }] =
+    useDisclosure(false);
 
   const ws = useWebSocket();
 
@@ -74,18 +90,17 @@ export function Servers() {
     queryFn: fetchUserServers,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 5 * 60 * 1000, 
+    staleTime: 5 * 60 * 1000,
     enabled: !!auth?.user,
   });
 
-  const handleServerChange = (server: Server,) => {
+  const handleServerChange = (server: Server) => {
     servers?.setServerID(server.server_id);
     servers?.setServerName(server.server_name);
+    servers?.setServerCode(server.invite_code);
 
     setChannelMessages([]);
   };
-
-
 
   let content;
   if (isLoading) {
@@ -99,8 +114,8 @@ export function Servers() {
   } else if (data?.servers) {
     content = (
       <Stack justify="center" gap={0}>
-        {data.servers.map((server: Server,) => (
-          <Server
+        {data.servers.map((server: Server) => (
+          <ServerItem
             key={server.server_id}
             icon={IconUser}
             label={server.server_name}
@@ -124,17 +139,33 @@ export function Servers() {
       <nav className={`${classes.navbar} ${borderClass}`}>
         <div className={classes.navbarMain}>
           <div className="mb-4">
-            <Server
+            <ServerItem
               serverID={null}
               icon={IconPlus}
               label="Create Server"
-              onClick={open}
+              onClick={openCreateServer}
+            />
+            <ServerItem
+              serverID={null}
+              icon={IconDoorEnter}
+              label="Join Server"
+              onClick={openJoinServer}
             />
           </div>
           {content}
         </div>
+        <ServerItem
+          serverID={null}
+          icon={IconSettings}
+          label="Settings"
+          onClick={() => navigate("/settings")}
+        />
       </nav>
-      <CreateServerModal opened={opened} onClose={close} />
+      <CreateServerModal
+        opened={createServerOpened}
+        onClose={closeCreateServer}
+      />
+      <JoinServerModal opened={joinServerOpened} onClose={closeJoinServer} />
     </>
   );
 }

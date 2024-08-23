@@ -13,6 +13,8 @@ type ServerContextType = {
   setServerID: Dispatch<SetStateAction<string | null>>;
   serverName: string | null;
   setServerName: Dispatch<SetStateAction<string | null>>;
+  serverCode: string | null;
+  setServerCode: Dispatch<SetStateAction<string | null>>;
 };
 
 export const ServerContext = createContext<ServerContextType | undefined>(
@@ -22,6 +24,7 @@ export const ServerContext = createContext<ServerContextType | undefined>(
 export const ServerProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [serverID, setServerID] = useState<string | null>(null);
   const [serverName, setServerName] = useState<string |null>(null)
+  const [serverCode, setServerCode] = useState<string | null>(null)
 
   useEffect(() => {
     console.log(serverID)
@@ -31,7 +34,9 @@ export const ServerProvider: FC<{ children: ReactNode }> = ({ children }) => {
     serverID,
     setServerID,
     serverName,
-    setServerName
+    setServerName,
+    serverCode,
+    setServerCode
   };
 
   return (

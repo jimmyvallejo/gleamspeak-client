@@ -143,7 +143,6 @@ export const RecentServerCarousel = () => {
     staleTime: 5 * 60 * 1000, 
   });
 
-  console.log("Recent Servers:", data);
 
   if (isLoading) {
     return <div>Loading...</div>;
