@@ -21,7 +21,7 @@ interface CreateServerModalProps {
   onClose: () => void;
 }
 
-export function CreateServerModal({ opened, onClose }: CreateServerModalProps) {
+export const CreateServerModal = ({ opened, onClose }: CreateServerModalProps) => {
   const auth = useContext(AuthContext);
   const api = useApi();
   const queryClient = useQueryClient();

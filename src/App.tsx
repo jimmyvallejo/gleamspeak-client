@@ -10,17 +10,15 @@ import { AuthContext } from "./contexts/AuthContext";
 import { ServerContext } from "./contexts/ServerContext";
 import { Servers } from "./components/global/navbars/Servers";
 import { Chat } from "./pages/Chat";
+import Settings from "./pages/Settings";
 import { Channels } from "./components/global/navbars/Channels";
 import { HeaderSimple } from "./components/global/navbars/Header";
+
 
 function App() {
   const { setColorScheme } = useMantineColorScheme();
   const auth = useContext(AuthContext);
   const servers = useContext(ServerContext);
-
-  if (!auth) {
-    console.log("Context not loaded");
-  }
 
   useEffect(() => {
     setColorScheme("dark");
@@ -48,6 +46,16 @@ function App() {
               }
             >
               <Route path="/chat/:channelId" element={<Chat />} />
+            </Route>
+            <Route
+              element={
+                <ProtectedIn
+                  isAuthenticated={!auth?.isAuthenticated}
+                  redirectPath="/auth"
+                />
+              }
+            >
+              <Route path="/settings" element={<Settings />} />
             </Route>
             <Route
               element={
