@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, ReactNode, FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
+import { useQueryClient } from "@tanstack/react-query";
 
 export type user = {
   id: string;
@@ -24,10 +25,11 @@ type AuthContextType = {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<user | null>(null);
 
   const api = useApi();
+  const queryClient = useQueryClient()
 
   const navigate = useNavigate();
 
@@ -91,6 +93,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     navigate("/auth");
     setIsAuthenticated(false);
     setUser(null);
+    queryClient.clear()
   };
 
   useEffect(() => {

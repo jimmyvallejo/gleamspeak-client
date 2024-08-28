@@ -100,6 +100,7 @@ export function Servers() {
     servers?.setServerCode(server.invite_code);
 
     setChannelMessages([]);
+    navigate("/")
   };
 
   let content;
