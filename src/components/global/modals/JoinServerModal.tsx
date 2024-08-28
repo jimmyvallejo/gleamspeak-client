@@ -66,9 +66,9 @@ export function JoinServerModal({ opened, onClose }: JoinServerModalProps) {
     onError: (error: Error) => {
       console.error("Server creation failed:", error);
       form.setErrors({
-        server_name: error.message || "Server creation failed.",
+        server_name: error.message || "Joining server failure.",
       });
-      notifications.show({ message: "Server Creation Failed", color: "red" });
+      notifications.show({ message: "Failed to join server", color: "red" });
     },
   });
 
@@ -82,14 +82,16 @@ export function JoinServerModal({ opened, onClose }: JoinServerModalProps) {
   });
 
   return (
+    
     <Modal
       opened={opened}
       onClose={onClose}
       title="Join server"
       className="text-bold"
       centered
+      radius="md"
     >
-      <Paper radius="md" p="xl">
+      <Paper radius="md" p="xl" withBorder>
         <Center>
           <Text size="lg" fw={500} className="">
             Enter code below to join
@@ -121,5 +123,6 @@ export function JoinServerModal({ opened, onClose }: JoinServerModalProps) {
         </form>
       </Paper>
     </Modal>
+ 
   );
 }

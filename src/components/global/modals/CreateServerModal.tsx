@@ -88,8 +88,9 @@ export const CreateServerModal = ({ opened, onClose }: CreateServerModalProps) =
       title="Create Your Server"
       className="text-bold"
       centered
+      radius="md"
     >
-      <Paper radius="md" p="xl">
+      <Paper radius="md" p="xl" withBorder>
         <Center>
           <Text size="lg" fw={500} className="">
             Your Adventure Begins Here

@@ -14,12 +14,16 @@ import { IconX, IconDownload, IconEdit } from "@tabler/icons-react";
 import { useState, useRef, useContext } from "react";
 import { useApi } from "../../../hooks/useApi";
 import { AuthContext } from "../../../contexts/AuthContext";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { notifications } from "@mantine/notifications";
 
 interface UserCardProps {
   source: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  handle: string;
 }
 
 interface SignedUrlResponse {
@@ -28,7 +32,11 @@ interface SignedUrlResponse {
 }
 
 export const UserCard = ({
-  source = "https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/avatars/avatar-8.png",
+  source,
+  firstName,
+  lastName,
+  email,
+  handle,
 }: UserCardProps) => {
   const theme = useMantineTheme();
   const openRef = useRef<() => void>(null);
@@ -36,6 +44,7 @@ export const UserCard = ({
 
   const auth = useContext(AuthContext);
   const api = useApi();
+  const queryClient = useQueryClient();
 
   const requestSignedUrl = useMutation<
     SignedUrlResponse,
@@ -85,6 +94,7 @@ export const UserCard = ({
 
       await uploadToS3(result.url, file);
       await updateDbAvatar.mutateAsync({ url: result.public_url });
+      queryClient.invalidateQueries({ queryKey: ["userSettings"] });
       notifications.show({
         message: "Successfuly updated avatar",
         color: "green",
@@ -168,10 +178,10 @@ export const UserCard = ({
         </Button>
       </Center>
       <Text ta="center" fz="lg" fw={500} mt="md">
-        Jane
+        {firstName} {lastName}
       </Text>
       <Text ta="center" c="dimmed" fz="sm">
-        jfingerlicker@me.io • Art director
+        {email} • {handle}
       </Text>
     </Paper>
   );
