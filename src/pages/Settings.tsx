@@ -1,5 +1,6 @@
 import { Container, Text, Loader, Alert, Center } from "@mantine/core";
 import { UserCard } from "../components/global/cards/UserCard";
+import { SettingsForm } from "../components/global/forms/SettingsForm";
 import { useQuery } from "@tanstack/react-query";
 import { useApi } from "../hooks/useApi";
 import { AuthContext } from "../contexts/AuthContext";
@@ -19,7 +20,7 @@ const Settings = () => {
     }
   };
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["userSettings"],
     queryFn: fetchUserInformation,
     retry: 3,
@@ -29,7 +30,7 @@ const Settings = () => {
     staleTime: Infinity,
   });
 
-  console.log(data)
+  console.log(data);
 
   if (isLoading) {
     return (
@@ -53,9 +54,15 @@ const Settings = () => {
       </Container>
     );
   }
-
+ 
   return (
-    <Container size="sm" my="xl">
+    <Container
+      className="flex flex-col  justify-center overflow-y-auto pt-[5rem]" 
+      size={"50%"}
+      style={{
+        height: "800px",
+      }}
+    >
       <UserCard
         source={data?.avatar_url}
         handle={data?.handle}
@@ -63,6 +70,15 @@ const Settings = () => {
         lastName={data?.last_name}
         email={data?.email}
       />
+      <SettingsForm
+        firstName={data?.first_name}
+        lastName={data?.last_name}
+        email={data?.email}
+        handle={data?.handle}
+        bio={data?.bio}
+        refetch={refetch}
+      />
+ 
     </Container>
   );
 };
