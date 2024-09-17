@@ -5,12 +5,13 @@ import {
   FC,
   Dispatch,
   SetStateAction,
-  useEffect,
 } from "react";
 
 type ServerContextType = {
   serverID: string | null;
   setServerID: Dispatch<SetStateAction<string | null>>;
+  ownerID: string | null;
+  setOwnerID: Dispatch<SetStateAction<string | null>>;
   serverName: string | null;
   setServerName: Dispatch<SetStateAction<string | null>>;
   serverCode: string | null;
@@ -23,16 +24,16 @@ export const ServerContext = createContext<ServerContextType | undefined>(
 
 export const ServerProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [serverID, setServerID] = useState<string | null>(null);
+  const [ownerID, setOwnerID] = useState<string | null>(null)
   const [serverName, setServerName] = useState<string |null>(null)
   const [serverCode, setServerCode] = useState<string | null>(null)
 
-  useEffect(() => {
-    console.log(serverID)
-  },[serverID])
 
   const contextValue: ServerContextType = {
     serverID,
     setServerID,
+    ownerID,
+    setOwnerID,
     serverName,
     setServerName,
     serverCode,

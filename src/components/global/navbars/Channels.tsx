@@ -8,7 +8,12 @@ import {
   Group,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconHome2, IconPlus, IconCopy } from "@tabler/icons-react";
+import {
+  IconHome2,
+  IconPlus,
+  IconCopy,
+  IconSettings,
+} from "@tabler/icons-react";
 import classes from "./Channel.module.css";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { ServerContext } from "../../../contexts/ServerContext";
@@ -21,6 +26,7 @@ import { useWebSocket } from "../../../hooks/useWebsocket";
 import { useQueryClient } from "@tanstack/react-query";
 import { copyToClipboard } from "../../../utils/copy";
 import { notifications } from "@mantine/notifications";
+import { useNavigate } from "react-router-dom";
 
 interface NavbarChannelProps {
   icon: typeof IconHome2;
@@ -77,9 +83,11 @@ function Server({ icon: Icon, onClick, active }: NavbarChannelProps) {
 
 export function Channels() {
   const auth = useContext(AuthContext);
-  const servers = useContext(ServerContext);
+  const server = useContext(ServerContext);
   const [opened, { open, close }] = useDisclosure(false);
   const [active, setActive] = useState<number | null>(null);
+
+  const navigate = useNavigate();
 
   const api = useApi();
   const ws = useWebSocket();
@@ -88,7 +96,7 @@ export function Channels() {
 
   const fetchUserTextChannels = async () => {
     try {
-      const response = await api.get(`/v1/channels/${servers?.serverID}`);
+      const response = await api.get(`/v1/channels/${server?.serverID}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching user servers:", error);
@@ -97,13 +105,13 @@ export function Channels() {
   };
 
   const { data, error } = useQuery({
-    queryKey: ["userTextChannels", servers?.serverID],
+    queryKey: ["userTextChannels", server?.serverID],
     queryFn: fetchUserTextChannels,
     staleTime: Infinity,
     gcTime: Infinity,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    enabled: !!auth?.user && !!servers?.serverID,
+    enabled: !!auth?.user && !!server?.serverID,
   });
 
   const handleChannel = (index: number, id: string) => {
@@ -113,8 +121,8 @@ export function Channels() {
   };
 
   const handleCopy = () => {
-    if (servers?.serverCode) {
-      copyToClipboard(servers.serverCode);
+    if (server?.serverCode) {
+      copyToClipboard(server.serverCode);
       notifications.show({
         message: "Copied to clipboard",
         color: "green",
@@ -124,7 +132,7 @@ export function Channels() {
 
   useEffect(() => {
     setActive(null);
-  }, [servers?.serverID]);
+  }, [server?.serverID]);
 
   const TextChannels = (
     <Accordion.Item
@@ -187,9 +195,27 @@ export function Channels() {
     <>
       <nav className={classes.navbar}>
         <Center className="flex flex-col items-center">
-          <h3>{`Server: ${servers?.serverName}`}</h3>
+          <div className="flex items-center">
+            <h3>
+              {`Server: ${
+                server?.serverName
+                  ? server.serverName.length > 10
+                    ? server.serverName.slice(0, 10) + "..."
+                    : server.serverName
+                  : ""
+              }`}
+            </h3>
+            {auth?.user?.id === server?.ownerID && (
+              <IconSettings
+                size="1.3rem"
+                className="cursor-pointer hover:text-blue-500 active:text-blue-700 transition-colors ml-2"
+                onClick={() => navigate(`/server-settings/${server?.serverID}`)}
+              />
+            )}
+          </div>
+
           <Group>
-            <Text>{`Code: ${servers?.serverCode}`}</Text>
+            <Text>{`Code: ${server?.serverCode}`}</Text>
             <IconCopy
               size="1.2rem"
               className="cursor-pointer hover:text-blue-500 active:text-blue-700 transition-colors"
@@ -217,7 +243,7 @@ export function Channels() {
         </div>
       </nav>
       <CreateTextChannel
-        serverID={servers?.serverID}
+        serverID={server?.serverID}
         opened={opened}
         onClose={close}
       />

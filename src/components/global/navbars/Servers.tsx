@@ -29,6 +29,7 @@ interface NavbarServerProps {
 
 type Server = {
   server_id: string;
+  owner_id: string,
   server_name: string;
   description: string;
   icon_url: string;
@@ -98,10 +99,13 @@ export function Servers() {
     servers?.setServerID(server.server_id);
     servers?.setServerName(server.server_name);
     servers?.setServerCode(server.invite_code);
+    servers?.setOwnerID(server.owner_id)
 
     setChannelMessages([]);
     navigate("/")
   };
+
+
 
   let content;
   if (isLoading) {
@@ -158,7 +162,7 @@ export function Servers() {
         <ServerItem
           serverID={null}
           icon={IconSettings}
-          label="Settings"
+          label="Account Settings"
           onClick={() => navigate("/settings")}
         />
       </nav>
