@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { Tooltip, UnstyledButton, Stack, rem } from "@mantine/core";
+import { Tooltip, UnstyledButton, Stack, rem, Image } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconHome2,
@@ -20,7 +20,8 @@ import { useWebSocket } from "../../../hooks/useWebsocket";
 import { useNavigate } from "react-router-dom";
 
 interface NavbarServerProps {
-  icon: typeof IconHome2;
+  icon: typeof IconHome2 | string;
+  image: string | undefined;
   label: string;
   onClick?(): void;
   serverID: string | null;
@@ -29,7 +30,7 @@ interface NavbarServerProps {
 
 type Server = {
   server_id: string;
-  owner_id: string,
+  owner_id: string;
   server_name: string;
   description: string;
   icon_url: string;
@@ -43,7 +44,7 @@ type Server = {
   server_updated_at: string;
 };
 
-function ServerItem({ icon: Icon, label, onClick, active }: NavbarServerProps) {
+function ServerItem({ icon: Icon, image, label, onClick, active }: NavbarServerProps) {
   return (
     <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
       <UnstyledButton
@@ -51,7 +52,12 @@ function ServerItem({ icon: Icon, label, onClick, active }: NavbarServerProps) {
         className={classes.link}
         data-active={active || undefined}
       >
-        <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
+        {Icon && (
+          <Icon style={{ width: rem(23), height: rem(23) }} stroke={1.5} />
+        )}
+        {image && (
+          <Image style={{ width: rem(30), height: rem(30) }} radius="xl" src={image}/>
+        )}
       </UnstyledButton>
     </Tooltip>
   );
@@ -99,13 +105,11 @@ export function Servers() {
     servers?.setServerID(server.server_id);
     servers?.setServerName(server.server_name);
     servers?.setServerCode(server.invite_code);
-    servers?.setOwnerID(server.owner_id)
+    servers?.setOwnerID(server.owner_id);
 
     setChannelMessages([]);
-    navigate("/")
+    navigate("/");
   };
-
-
 
   let content;
   if (isLoading) {
@@ -122,7 +126,8 @@ export function Servers() {
         {data.servers.map((server: Server) => (
           <ServerItem
             key={server.server_id}
-            icon={IconUser}
+            icon={!server.icon_url ? IconUser : ""}
+            image={server.icon_url ? server.icon_url : ""}
             label={server.server_name}
             serverID={server.server_id}
             active={servers?.serverID === server.server_id}
@@ -147,12 +152,14 @@ export function Servers() {
             <ServerItem
               serverID={null}
               icon={IconPlus}
+              image=""
               label="Create Server"
               onClick={openCreateServer}
             />
             <ServerItem
               serverID={null}
               icon={IconDoorEnter}
+              image=""
               label="Join Server"
               onClick={openJoinServer}
             />
@@ -162,6 +169,7 @@ export function Servers() {
         <ServerItem
           serverID={null}
           icon={IconSettings}
+          image=""
           label="Account Settings"
           onClick={() => navigate("/settings")}
         />

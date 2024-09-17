@@ -33,7 +33,6 @@ const ServerSettings = () => {
     staleTime: Infinity,
   });
 
-
   if (isLoading) {
     return (
       <Container size="sm" my="xl">
@@ -66,6 +65,7 @@ const ServerSettings = () => {
       }}
     >
       <ServerCard
+        serverID={serverId}
         bannerUrl={data?.banner_url}
         iconUrl={data?.icon_url}
         serverName={data?.server_name}

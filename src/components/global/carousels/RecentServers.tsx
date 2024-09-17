@@ -92,7 +92,7 @@ const Card = ({
       }}
       className={classes.card}
     >
-      <div className="ml-5">
+      <div className=" ml-2 bg-[#343a40] px-5 py-2 rounded-lg">
         <Text className={classes.category} size="s">
           Owner: {owner}
         </Text>
@@ -112,9 +112,9 @@ const Card = ({
         >
           Join Server
         </Button>
-        <Text size="sm" className={classes.description}>
+        {/* <Text size="sm" className={classes.description}>
           Members: {memberCount}
-        </Text>
+        </Text> */}
       </div>
     </Paper>
   );

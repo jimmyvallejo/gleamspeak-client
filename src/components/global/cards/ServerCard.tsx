@@ -6,12 +6,11 @@ import {
   Group,
   rem,
   useMantineTheme,
-  Center,
   Box,
   Image,
 } from "@mantine/core";
 import { Dropzone, MIME_TYPES } from "@mantine/dropzone";
-import { IconX, IconDownload, IconEdit } from "@tabler/icons-react";
+import { IconX, IconDownload } from "@tabler/icons-react";
 import { useState, useRef, useContext } from "react";
 import { useApi } from "../../../hooks/useApi";
 import { AuthContext } from "../../../contexts/AuthContext";
@@ -20,6 +19,7 @@ import axios from "axios";
 import { notifications } from "@mantine/notifications";
 
 interface ServerCardProps {
+  serverID: string | undefined;
   bannerUrl: string;
   iconUrl: string;
   serverName: string;
@@ -32,6 +32,7 @@ interface SignedUrlResponse {
 }
 
 export const ServerCard = ({
+  serverID,
   bannerUrl,
   iconUrl,
   serverName,
@@ -42,7 +43,7 @@ export const ServerCard = ({
   const theme = useMantineTheme();
   const iconOpenRef = useRef<() => void>(null);
   const bannerOpenRef = useRef<() => void>(null);
-  const [avatarSrc, setAvatarSrc] = useState<string>(iconUrl);
+  const [iconSrc, setIconSrc] = useState<string>(iconUrl);
   const [bannerSrc, setBannerSrc] = useState<string>(bannerUrl);
 
   const auth = useContext(AuthContext);
@@ -77,20 +78,26 @@ export const ServerCard = ({
   const updateDbImage = useMutation<
     void,
     Error,
-    { url: string; type: "avatar" | "banner" }
+    { url: string; type: "icon" | "banner" }
   >({
     mutationFn: async ({ url, type }) => {
       if (!auth) throw new Error("Auth context not available");
-      await api.put(`/v1/users/${type}`, { url });
+
+      const data = {
+        server_id: serverID,
+        url: url,
+        is_icon: type === "icon" ? true : false,
+      };
+      await api.put(`/v1/servers/images`, data);
     },
   });
 
-  const handleDrop = async (files: File[], type: "avatar" | "banner") => {
+  const handleDrop = async (files: File[], type: "icon" | "banner") => {
     const file = files[0];
     const reader = new FileReader();
     reader.onload = (event) => {
-      if (type === "avatar") {
-        setAvatarSrc(event.target?.result as string);
+      if (type === "icon") {
+        setIconSrc(event.target?.result as string);
       } else {
         setBannerSrc(event.target?.result as string);
       }
@@ -104,6 +111,7 @@ export const ServerCard = ({
       });
 
       await uploadToS3(result.url, file);
+
       await updateDbImage.mutateAsync({ url: result.public_url, type });
       queryClient.invalidateQueries({ queryKey: ["serverSettings"] });
       notifications.show({
@@ -112,8 +120,8 @@ export const ServerCard = ({
       });
     } catch (error) {
       console.error(`Error in ${type} upload process:`, error);
-      if (type === "avatar") {
-        setAvatarSrc(iconUrl);
+      if (type === "icon") {
+        setIconSrc(iconUrl);
       } else {
         setBannerSrc(bannerUrl);
       }
@@ -129,7 +137,12 @@ export const ServerCard = ({
       <Dropzone
         openRef={bannerOpenRef}
         onDrop={(files) => handleDrop(files, "banner")}
-        accept={[MIME_TYPES.png, MIME_TYPES.jpeg, MIME_TYPES.webp]}
+        accept={[
+          MIME_TYPES.png,
+          MIME_TYPES.jpeg,
+          MIME_TYPES.webp,
+          MIME_TYPES.svg,
+        ]}
         maxSize={5 * 1024 ** 2}
         radius="md"
         p={0}
@@ -174,7 +187,7 @@ export const ServerCard = ({
 
       <Dropzone
         openRef={iconOpenRef}
-        onDrop={(files) => handleDrop(files, "avatar")}
+        onDrop={(files) => handleDrop(files, "icon")}
         accept={[
           MIME_TYPES.png,
           MIME_TYPES.jpeg,
@@ -209,7 +222,7 @@ export const ServerCard = ({
           </Dropzone.Reject>
           <Dropzone.Idle>
             <Box style={{ position: "relative" }}>
-              <Avatar src={avatarSrc} size={120} radius={120} />
+              <Avatar src={iconSrc} size={120} radius={120} />
             </Box>
           </Dropzone.Idle>
         </Group>
@@ -228,7 +241,7 @@ export const ServerCard = ({
         {serverName}
       </Text>
       <Text ta="center" c="dimmed" fz="sm">
-        {"Member Count:"} • {memberCount}
+        {"Member Count"} • {memberCount}
       </Text>
     </Paper>
   );
