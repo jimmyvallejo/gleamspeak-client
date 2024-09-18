@@ -91,7 +91,7 @@ export const SettingsForm = ({
       });
     },
     onError: (error) => {
-      console.error("Login failed:", error);
+      console.error("Update failed:", error);
       form.setErrors({ email: "Update failed" });
       notifications.show({
         message: "Failed to update user",
@@ -100,7 +100,7 @@ export const SettingsForm = ({
     },
   });
 
-  const handleLogin = form.onSubmit((values) => {
+  const handleUpdate = form.onSubmit((values) => {
     if (form.validate().hasErrors) {
       return;
     }
@@ -117,7 +117,7 @@ export const SettingsForm = ({
     <Paper radius="md" p="xl" withBorder {...PaperProps}>
       <Divider label="Update Profile" labelPosition="center" my="md" />
 
-      <form onSubmit={handleLogin}>
+      <form onSubmit={handleUpdate}>
         <Stack>
           <TextInput
             required

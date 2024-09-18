@@ -58,7 +58,7 @@ const ServerSettings = () => {
 
   return (
     <Container
-      className="flex flex-col  justify-center overflow-y-auto pt-[12rem]"
+      className="flex flex-col  justify-center overflow-y-auto "
       size={"50%"}
       style={{
         height: "800px",
@@ -72,11 +72,9 @@ const ServerSettings = () => {
         memberCount={data?.member_count}
       />
       <ServerSettingsForm
-        firstName={data?.first_name}
-        lastName={data?.last_name}
-        email={data?.email}
-        handle={data?.handle}
-        bio={data?.bio}
+        serverID={serverId}
+        serverName={data?.server_name}
+        description={data?.description}
         refetch={refetch}
       />
     </Container>

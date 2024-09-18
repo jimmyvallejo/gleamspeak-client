@@ -32,7 +32,7 @@ const Card = ({
   banner,
   serverName,
   owner,
-  memberCount,
+  // memberCount,
   description,
   user,
 }: CardProps) => {
@@ -61,7 +61,10 @@ const Card = ({
     },
     onError: (error: Error) => {
       console.error("Server join failed:", error);
-      notifications.show({ message: "Already a member of this server", color: "red" });
+      notifications.show({
+        message: "Already a member of this server",
+        color: "red",
+      });
     },
   });
 
@@ -92,23 +95,36 @@ const Card = ({
       }}
       className={classes.card}
     >
-      <div className=" ml-2 bg-[#343a40] px-5 py-2 rounded-lg">
+      <div
+        className="ml-2 bg-[#343a40]  px-5 py-2 rounded-lg shadow-lg"
+        style={{
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+          boxShadow:
+            "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)",
+        }}
+      >
         <Text className={classes.category} size="s">
           Owner: {owner}
         </Text>
         <Title order={3} className={classes.title}>
-          Server Name: {serverName}
+          Server Name: {serverName.slice(0,10)}
         </Title>
         <Text className={classes.description} size="s">
-          Description: {description ? description : "No description yet"}
+          Description: {description ? description.slice(0, 15) : "No description yet"}...
         </Text>
       </div>
       <div className="self-end flex flex-col items-center mr-4 mt-3">
         <Button
           onClick={user ? handleClick : handleNavigate}
           variant="filled"
-          color="gray"
-          style={{ marginBottom: "3px" }}
+          className="bg-[#228be6] hover:bg-[#1c7ed6] transition-colors duration-200"
+          style={{
+            marginBottom: "3px",
+            boxShadow:
+              "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)",
+            transform: "translateY(-2px)",
+            transition: "transform 0.2s, box-shadow 0.2s",
+          }}
         >
           Join Server
         </Button>
@@ -140,9 +156,8 @@ export const RecentServerCarousel = () => {
     queryFn: fetchRecentServers,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 5 * 60 * 1000, 
+    staleTime: 5 * 60 * 1000,
   });
-
 
   if (isLoading) {
     return <div>Loading...</div>;

@@ -18,20 +18,16 @@ import { useApi } from "../../../hooks/useApi";
 import { notifications } from "@mantine/notifications";
 
 interface ServerSettingsFormProps extends PaperProps {
-  firstName: string;
-  lastName: string;
-  email: string;
-  handle: string;
-  bio: string;
+  serverID: string;
+  serverName: string;
+  description: string;
   refetch: () => Promise<any>;
 }
 
 export const ServerSettingsForm = ({
-  email,
-  firstName,
-  lastName,
-  handle,
-  bio,
+  serverID,
+  serverName,
+  description,
   refetch,
   ...PaperProps
 }: ServerSettingsFormProps) => {
@@ -41,15 +37,11 @@ export const ServerSettingsForm = ({
 
   const form = useForm({
     initialValues: {
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      handle: handle,
-      bio: bio,
+      serverName: serverName,
+      description: description,
     },
     validate: {
-      email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
-      handle: (val) => {
+      serverName: (val) => {
         if (!val || val.trim() === "") {
           return "Display name is required";
         }
@@ -58,114 +50,74 @@ export const ServerSettingsForm = ({
     },
   });
 
-  const updateUserMutation = useMutation({
+  const updateServerMutation = useMutation({
     mutationFn: async ({
-      email,
-      handle,
-      firstName,
-      lastName,
-      bio,
+      serverName,
+      description,
     }: {
-      email: string;
-      handle: string;
-      firstName: string;
-      lastName: string;
-      bio: string;
+      serverName: string;
+      description: string;
     }) => {
       if (!auth) throw new Error("Auth context not available");
       const data = {
-        email: email,
-        handle: handle,
-        first_name: firstName,
-        last_name: lastName,
-        bio: bio,
+        server_id: serverID,
+        server_name: serverName,
+        description: description,
       };
-      await api.put(`/v1/users`, data);
+      await api.put(`/v1/servers`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userSettings"] });
+      queryClient.invalidateQueries({ queryKey: ["serverSettings"] });
       refetch();
       notifications.show({
-        message: "Successfuly updated user",
+        message: "Successfuly updated server",
         color: "green",
       });
     },
     onError: (error) => {
-      console.error("Login failed:", error);
+      console.error("Update failed:", error);
       form.setErrors({ email: "Update failed" });
       notifications.show({
-        message: "Failed to update user",
+        message: "Failed to update server",
         color: "red",
       });
     },
   });
 
-  const handleLogin = form.onSubmit((values) => {
+  const handleUpdate = form.onSubmit((values) => {
     if (form.validate().hasErrors) {
       return;
     }
-    updateUserMutation.mutate({
-      email: values.email,
-      handle: values.handle,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      bio: values.bio,
+    updateServerMutation.mutate({
+      serverName: values.serverName,
+      description: values.description,
     });
   });
 
   return (
     <Paper radius="md" p="xl" withBorder {...PaperProps}>
-      <Divider label="Update Profile" labelPosition="center" my="md" />
+      <Divider label="Update Server" labelPosition="center" my="md" />
 
-      <form onSubmit={handleLogin}>
+      <form onSubmit={handleUpdate}>
         <Stack>
           <TextInput
             required
-            label="Email"
-            placeholder="hello@gleamspeak.com"
-            value={form.values.email}
+            label="Server Name"
+            placeholder="gleamspeak"
+            value={form.values.serverName}
             onChange={(event) =>
-              form.setFieldValue("email", event.currentTarget.value)
+              form.setFieldValue("serverName", event.currentTarget.value)
             }
             error={form.errors.email}
             radius="md"
           />
-          <TextInput
-            required
-            label="Display Name"
-            placeholder="gleamspeak"
-            value={form.values.handle}
-            onChange={(event) =>
-              form.setFieldValue("handle", event.currentTarget.value)
-            }
-            error={form.errors.handle}
-            radius="md"
-          />
-          <TextInput
-            label="First Name"
-            placeholder="No first name yet"
-            value={form.values.firstName}
-            onChange={(event) =>
-              form.setFieldValue("firstName", event.currentTarget.value)
-            }
-            radius="md"
-          />
-          <TextInput
-            label="Last Name"
-            placeholder="No last name yet"
-            value={form.values.lastName}
-            onChange={(event) =>
-              form.setFieldValue("lastName", event.currentTarget.value)
-            }
-            radius="md"
-          />
           <Textarea
-            label="Bio"
+            label="Description"
             minRows={3}
-            placeholder="A short bio about yourself"
-            value={form.values.bio}
+            placeholder="A short description about the server"
+            value={form.values.description}
             onChange={(event) =>
-              form.setFieldValue("bio", event.currentTarget.value)
+              form.setFieldValue("description", event.currentTarget.value)
             }
             radius="md"
           />
