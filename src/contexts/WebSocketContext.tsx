@@ -7,6 +7,7 @@ import {
   SetStateAction,
   useContext,
   useEffect,
+  useCallback,
 } from "react";
 import { AuthContext } from "./AuthContext";
 
@@ -15,7 +16,6 @@ import {
   SendMessageEvent,
   ChangeChatRoomEvent,
 } from "./WebSocketEvents";
-
 
 interface EventPayload {
   [key: string]: any;
@@ -31,7 +31,8 @@ type WebSocketContextType = {
     user: string | null | undefined,
     handle: string | null | undefined,
     message: string | null,
-    image: string
+    image: string,
+    avatar: string | null,
   ) => void;
   channelMessages: any[];
   setChannelMessages: Dispatch<SetStateAction<any[] | []>>;
@@ -51,56 +52,70 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [channelMessages, setChannelMessages] = useState<any[]>([]);
 
+  const connectWebSocket = useCallback(() => {
+    if (socket?.readyState === WebSocket.OPEN) {
+      console.log("WebSocket already connected");
+      return;
+    }
+
+    setConnectionError(null);
+    const ws = new WebSocket("ws://localhost:8080/ws");
+
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+      setConnected(true);
+      setConnectionError(null);
+    };
+
+    ws.onmessage = (evt) => {
+      try {
+        const eventData = JSON.parse(evt.data);
+        console.log("Received message:", eventData);
+        routeEvent(eventData);
+      } catch (error) {
+        console.error("Error parsing message:", error);
+      }
+    };
+
+    ws.onclose = (event) => {
+      console.log("WebSocket disconnected:", event.reason);
+      setConnected(false);
+      setConnectionError(
+        `Connection closed: ${event.reason || "Unknown reason"}`
+      );
+      if (auth?.user) {
+        setTimeout(connectWebSocket, 5000);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      setConnectionError(
+        "Failed to connect to WebSocket server. Please check your network connection and server status."
+      );
+    };
+
+    setSocket(ws);
+  }, [auth?.user]);
+
   useEffect(() => {
     if (auth?.user) {
-      const connectWebSocket = () => {
-        setConnectionError(null);
-        const ws = new WebSocket("ws://localhost:8080/ws");
-
-        ws.onopen = () => {
-          console.log("WebSocket connected");
-          setConnected(true);
-          setConnectionError(null);
-        };
-
-        ws.onmessage = (evt) => {
-          try {
-            const eventData = JSON.parse(evt.data);
-            console.log("Received message:", eventData);
-            routeEvent(eventData);
-          } catch (error) {
-            console.error("Error parsing message:", error);
-          }
-        };
-
-        ws.onclose = (event) => {
-          console.log("WebSocket disconnected:", event.reason);
-          setConnected(false);
-          setConnectionError(
-            `Connection closed: ${event.reason || "Unknown reason"}`
-          );
-          setTimeout(connectWebSocket, 5000);
-        };
-
-        ws.onerror = (error) => {
-          console.error("WebSocket error:", error);
-          setConnectionError(
-            "Failed to connect to WebSocket server. Please check your network connection and server status."
-          );
-        };
-
-        setSocket(ws);
-      };
-
       connectWebSocket();
-
-      return () => {
-        if (socket) {
-          socket.close();
-        }
-      };
+    } else {
+      if (socket) {
+        socket.close();
+        setSocket(null);
+        setConnected(false);
+        setChannelMessages([]);
+      }
     }
-  }, [auth?.user]);
+
+    return () => {
+      if (socket) {
+        socket.close();
+      }
+    };
+  }, [auth?.user, connectWebSocket]);
 
   const routeEvent = (event: Event<EventPayload>) => {
     if (event.type === undefined) {
@@ -122,12 +137,12 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
         console.warn("Unsupported message type:", event.type);
         break;
     }
-  }
+  };
 
   const handleNewMessage = (payload: EventPayload) => {
     console.log("New message:", payload);
     setChannelMessages((prevMessages) => [...prevMessages, payload]);
-  }
+  };
 
   function handleChangeChatRoom(payload: EventPayload) {
     console.log("Changed chat room:", payload);
@@ -146,7 +161,8 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     user: string | null | undefined,
     handle: string | null | undefined,
     message: string | null,
-    image: string
+    image: string,
+    avatar: string | null
   ) => {
     if (socket && connected) {
       const outgoingEvent = new SendMessageEvent(
@@ -154,11 +170,12 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
         user,
         handle,
         textRoom,
-        image
+        image,
+        avatar
       );
-      if (textRoom){
-      sendEvent("send_message", outgoingEvent);
-      } 
+      if (textRoom) {
+        sendEvent("send_message", outgoingEvent);
+      }
     } else {
       console.error("WebSocket is not connected or invalid user/message");
     }

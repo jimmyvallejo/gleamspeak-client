@@ -39,7 +39,7 @@ export function Chat() {
     }
   };
 
-  const { data, isLoading, isError, error,} = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["channelMessages", textRoom],
     queryFn: fetchChannelMessages,
     retry: 3,
@@ -50,10 +50,10 @@ export function Chat() {
   useEffect(() => {
     if (data) {
       console.log("Channel messages fetched successfully");
+      console.log(data);
       setChannelMessages(data);
     }
   }, [data, setChannelMessages]);
-
 
   const handleSend = () => {
     console.log(auth?.user, newMessage);
@@ -63,12 +63,12 @@ export function Chat() {
       return;
     }
 
-    const { id, handle } = auth.user;
+    const { id, handle, avatar } = auth.user;
 
     if (newMessage.trim()) {
-      sendMessage(id, handle, newMessage, image);
+      sendMessage(id, handle, newMessage, image, avatar);
     }
-    setNewMessage("")
+    setNewMessage("");
   };
 
   useEffect(() => {
@@ -109,10 +109,17 @@ export function Chat() {
                 }}
               >
                 <Text size="xs">
-                  {channelMessages ? formatMessageDate(message?.updated_at).toLocaleString() : ""}
+                  {channelMessages
+                    ? formatMessageDate(message?.updated_at).toLocaleString()
+                    : ""}
                 </Text>
                 <Group className="mt-2">
-                  <Avatar src={"/user.png"} radius="xl" />
+                  <Avatar
+                    src={
+                      message.owner_image ? message.owner_image : "/user.png"
+                    }
+                    radius="xl"
+                  />
                   <div>
                     <Text size="sm">{message.handle}</Text>
                     <Text fw={"bold"} size="sm">

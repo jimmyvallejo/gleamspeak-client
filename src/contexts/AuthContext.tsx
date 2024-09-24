@@ -7,6 +7,7 @@ export type user = {
   id: string;
   handle: string;
   email: string;
+  avatar: string;
 };
 
 type AuthContextType = {
@@ -29,7 +30,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<user | null>(null);
 
   const api = useApi();
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const navigate = useNavigate();
 
@@ -93,7 +94,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     navigate("/auth");
     setIsAuthenticated(false);
     setUser(null);
-    queryClient.clear()
+    queryClient.clear();
   };
 
   useEffect(() => {
