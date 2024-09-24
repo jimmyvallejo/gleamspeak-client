@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext, useEffect, useRef, KeyboardEvent } from "react";
 import {
   Paper,
   Text,
@@ -71,6 +71,12 @@ export function Chat() {
     setNewMessage("");
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleSend();
+    }
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [channelMessages]);
@@ -138,10 +144,11 @@ export function Chat() {
           placeholder="Type a message..."
           value={newMessage}
           onChange={(event) => setNewMessage(event.currentTarget.value)}
+          onKeyDown={handleKeyDown}
           style={{ flex: 1 }}
           disabled={isLoading || isError}
         />
-        <Button onClick={() => handleSend()} disabled={isLoading || isError}>
+        <Button onClick={handleSend} disabled={isLoading || isError}>
           Send
         </Button>
       </Group>
