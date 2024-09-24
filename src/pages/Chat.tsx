@@ -95,14 +95,12 @@ export function Chat() {
             {error?.message || "An error occurred while fetching messages."}
           </Alert>
         ) : (
-          <Stack className="p-4">
+          <Stack className="p-1">
             {channelMessages.map((message) => (
               <Box
                 key={message.id}
                 p="xs"
-                className={`rounded-md w-[25%] h-[90px] ${
-                  message.owner_id === auth?.user?.id ? "ml-auto" : "mr-auto"
-                }`}
+                className={`rounded-md w-full min-h-[90px] mt-3`}
                 style={{
                   background:
                     message.owner_id === auth?.user?.id ? "#3498db" : "#1A5319",
@@ -120,9 +118,11 @@ export function Chat() {
                     }
                     radius="xl"
                   />
-                  <div>
-                    <Text size="sm">{message.handle}</Text>
+                  <div className="flex-1 min-w-0">
                     <Text fw={"bold"} size="sm">
+                      {message.handle}
+                    </Text>
+                    <Text size="sm" className="break-words">
                       {message.message}
                     </Text>
                   </div>
