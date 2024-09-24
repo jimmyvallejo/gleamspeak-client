@@ -16,6 +16,8 @@ type ServerContextType = {
   setServerName: Dispatch<SetStateAction<string | null>>;
   serverCode: string | null;
   setServerCode: Dispatch<SetStateAction<string | null>>;
+  serverBanner: string | null;
+  setServerBanner: Dispatch<SetStateAction<string | null>>;
 };
 
 export const ServerContext = createContext<ServerContextType | undefined>(
@@ -27,7 +29,7 @@ export const ServerProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [ownerID, setOwnerID] = useState<string | null>(null)
   const [serverName, setServerName] = useState<string |null>(null)
   const [serverCode, setServerCode] = useState<string | null>(null)
-
+  const [serverBanner, setServerBanner] = useState<string | null>(null)
 
   const contextValue: ServerContextType = {
     serverID,
@@ -37,7 +39,9 @@ export const ServerProvider: FC<{ children: ReactNode }> = ({ children }) => {
     serverName,
     setServerName,
     serverCode,
-    setServerCode
+    setServerCode,
+    serverBanner,
+    setServerBanner
   };
 
   return (

@@ -44,7 +44,13 @@ type Server = {
   server_updated_at: string;
 };
 
-function ServerItem({ icon: Icon, image, label, onClick, active }: NavbarServerProps) {
+function ServerItem({
+  icon: Icon,
+  image,
+  label,
+  onClick,
+  active,
+}: NavbarServerProps) {
   return (
     <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
       <UnstyledButton
@@ -56,7 +62,11 @@ function ServerItem({ icon: Icon, image, label, onClick, active }: NavbarServerP
           <Icon style={{ width: rem(23), height: rem(23) }} stroke={1.5} />
         )}
         {image && (
-          <Image style={{ width: rem(30), height: rem(30) }} radius="xl" src={image}/>
+          <Image
+            style={{ width: rem(30), height: rem(30) }}
+            radius="xl"
+            src={image}
+          />
         )}
       </UnstyledButton>
     </Tooltip>
@@ -106,7 +116,7 @@ export function Servers() {
     servers?.setServerName(server.server_name);
     servers?.setServerCode(server.invite_code);
     servers?.setOwnerID(server.owner_id);
-
+    servers?.setServerBanner(server.banner_url);
     setChannelMessages([]);
     navigate("/");
   };

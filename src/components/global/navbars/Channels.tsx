@@ -194,39 +194,50 @@ export function Channels() {
   return (
     <>
       <nav className={classes.navbar}>
-        <Center className="flex flex-col items-center">
-          <div className="flex items-center">
-            <h3>
-              {`Server: ${
-                server?.serverName
+        <Center
+          className="flex flex-col items-center w-full relative"
+          style={{
+            backgroundImage: `url(${server?.serverBanner})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            minHeight: "150px", // Adjust this value as needed
+          }}
+        >
+          <div className={`absolute inset-0 ${server?.serverBanner ? "bg-black" : ""} bg-opacity-50`} />{" "}
+          <div className="relative z-10 text-white">
+            {" "}
+            <div className="flex items-center mb-2">
+              <h3 className="text-xl font-bold min-w-[84%]">
+                Server: {server?.serverName
                   ? server.serverName.length > 10
                     ? server.serverName.slice(0, 10) + "..."
                     : server.serverName
-                  : ""
-              }`}
-            </h3>
-            {auth?.user?.id === server?.ownerID && (
-              <IconSettings
-                size="1.3rem"
-                className="cursor-pointer hover:text-blue-500 active:text-blue-700 transition-colors ml-2"
-                onClick={() => navigate(`/server-settings/${server?.serverID}`)}
+                  : ""}
+              </h3>
+              {auth?.user?.id === server?.ownerID && (
+                <IconSettings
+                  size="1.3rem"
+                  className="cursor-pointer hover:text-blue-300 active:text-blue-500 transition-colors ml-2"
+                  onClick={() =>
+                    navigate(`/server-settings/${server?.serverID}`)
+                  }
+                />
+              )}
+            </div>
+            <Group justify="space-between">
+              <Text>Code: {server?.serverCode}</Text>
+              <IconCopy
+                size="1.2rem"
+                className="cursor-pointer hover:text-blue-300 active:text-blue-500 transition-colors"
+                onClick={handleCopy}
               />
-            )}
+            </Group>
           </div>
-
-          <Group>
-            <Text>{`Code: ${server?.serverCode}`}</Text>
-            <IconCopy
-              size="1.2rem"
-              className="cursor-pointer hover:text-blue-500 active:text-blue-700 transition-colors"
-              onClick={handleCopy}
-            />
-          </Group>
         </Center>
 
         <div className={classes.navbarMain}>
-          <Divider className="w-full" my="sm" />
-          <div className="mb-4 flex items-center mr-5">
+          <Divider variant="" className="w-[100%]" my="xs" />
+          <div className=" flex items-center mr-5">
             <Server
               serverID={null}
               icon={IconPlus}
