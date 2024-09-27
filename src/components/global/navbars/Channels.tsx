@@ -6,6 +6,7 @@ import {
   Divider,
   Text,
   Group,
+  Tooltip
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -200,13 +201,14 @@ export function Channels() {
             backgroundImage: `url(${server?.serverBanner})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            minHeight: "150px", // Adjust this value as needed
+            minHeight: "150px", 
           }}
         >
           <div className={`absolute inset-0 ${server?.serverBanner ? "bg-black" : ""} bg-opacity-50`} />{" "}
           <div className="relative z-10 text-white">
             {" "}
             <div className="flex items-center mb-2">
+            <Tooltip label={server?.serverName} position="top" transitionProps={{ duration: 0 }}>
               <h3 className="text-xl font-bold min-w-[84%]">
                 Server: {server?.serverName
                   ? server.serverName.length > 10
@@ -214,7 +216,10 @@ export function Channels() {
                     : server.serverName
                   : ""}
               </h3>
+              </Tooltip>
               {auth?.user?.id === server?.ownerID && (
+                <div className="flex items-center">
+                 <Tooltip label={"Server Settings"} position="right" transitionProps={{ duration: 0 }}>
                 <IconSettings
                   size="1.3rem"
                   className="cursor-pointer hover:text-blue-300 active:text-blue-500 transition-colors ml-2"
@@ -222,15 +227,19 @@ export function Channels() {
                     navigate(`/server-settings/${server?.serverID}`)
                   }
                 />
+                </Tooltip>
+                </div>
               )}
             </div>
             <Group justify="space-between">
               <Text>Code: {server?.serverCode}</Text>
+              <Tooltip label={"Copy"} position="right" transitionProps={{ duration: 0 }}>
               <IconCopy
                 size="1.2rem"
                 className="cursor-pointer hover:text-blue-300 active:text-blue-500 transition-colors"
                 onClick={handleCopy}
               />
+              </Tooltip>
             </Group>
           </div>
         </Center>
