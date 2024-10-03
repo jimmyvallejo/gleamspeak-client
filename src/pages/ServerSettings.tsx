@@ -58,7 +58,7 @@ const ServerSettings = () => {
 
   return (
     <Container
-      className="flex flex-col  justify-center overflow-y-auto "
+      className="flex flex-col  justify-center overflow-y-auto pt-[5rem] "
       size={"50%"}
       style={{
         height: "800px",
