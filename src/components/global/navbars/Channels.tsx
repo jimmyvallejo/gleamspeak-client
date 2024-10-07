@@ -19,7 +19,7 @@ import classes from "./Channel.module.css";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { ServerContext } from "../../../contexts/ServerContext";
 import { useContext, useState, useEffect } from "react";
-import { CreateTextChannel } from "../modals/CreateTextChannelModa";
+import { CreateTextChannel } from "../modals/CreateTextChannelModal";
 import { useApi } from "../../../hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";

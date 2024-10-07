@@ -32,7 +32,7 @@ export function CreateTextChannel({
 }: CreateTextChannelModalProps) {
   const auth = useContext(AuthContext);
   const api = useApi();
-  //   const queryClient = useQueryClient();
+
 
   const queryClient = useQueryClient();
 

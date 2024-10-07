@@ -19,6 +19,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "../../../hooks/useApi";
 import { notifications } from "@mantine/notifications";
 import { useNavigate } from "react-router-dom";
+import { DeleteServerModal } from "../modals/DeleteServerModal";
+import { useDisclosure } from "@mantine/hooks";
 
 interface ServerSettingsFormProps extends PaperProps {
   serverID: string | undefined;
@@ -38,6 +40,7 @@ export const ServerSettingsForm = ({
   const server = useContext(ServerContext);
   const api = useApi();
   const queryClient = useQueryClient();
+  const [opened, { open, close }] = useDisclosure(false);
   const navigate = useNavigate();
 
   const form = useForm({
@@ -100,7 +103,7 @@ export const ServerSettingsForm = ({
       });
       queryClient.refetchQueries({ queryKey: ["userServers"] });
       navigate("/");
-      handleServerChange()
+      handleServerChange();
       notifications.show({
         message: "Successfully deleted server",
         color: "green",
@@ -135,7 +138,6 @@ export const ServerSettingsForm = ({
     server?.setServerCode(null);
     server?.setOwnerID(null);
     server?.setServerBanner(null);
-
   };
 
   return (
@@ -185,20 +187,18 @@ export const ServerSettingsForm = ({
       />
       <Group justify="end" mt="xl">
         <Button
-          onClick={handleDelete}
+          onClick={() => open()}
           radius="xl"
           styles={(theme: MantineTheme) => ({
             root: {
               backgroundColor: theme.colors.red[7],
-              "&:hover": {
-                backgroundColor: theme.colors.red[8],
-              },
             },
           })}
         >
           {upperFirst("Delete Server")}
         </Button>
       </Group>
+      <DeleteServerModal serverName={serverName} handleDelete={handleDelete} opened={opened} onClose={close} />
     </Paper>
   );
 };
