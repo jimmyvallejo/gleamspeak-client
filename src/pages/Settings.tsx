@@ -57,7 +57,7 @@ const Settings = () => {
  
   return (
     <Container
-      className="flex flex-col  justify-center overflow-y-auto pt-[5rem]" 
+      className="flex flex-col  justify-center overflow-y-auto pt-[10rem]" 
       size={"50%"}
       style={{
         height: "800px",
@@ -71,6 +71,7 @@ const Settings = () => {
         email={data?.email}
       />
       <SettingsForm
+        id={data?.id}
         firstName={data?.first_name}
         lastName={data?.last_name}
         email={data?.email}

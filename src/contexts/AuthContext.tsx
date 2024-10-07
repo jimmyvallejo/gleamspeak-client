@@ -2,6 +2,7 @@ import { createContext, useState, useEffect, ReactNode, FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
 import { useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 
 export type user = {
   id: string;
@@ -90,7 +91,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   };
   const logout = () => {
-    api.post(`/v1/logout`);
+    axios.post(`/v1/logout`);
     navigate("/auth");
     setIsAuthenticated(false);
     setUser(null);

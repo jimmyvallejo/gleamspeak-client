@@ -40,7 +40,9 @@ export const ServerSettingsForm = ({
   const server = useContext(ServerContext);
   const api = useApi();
   const queryClient = useQueryClient();
+
   const [opened, { open, close }] = useDisclosure(false);
+  
   const navigate = useNavigate();
 
   const form = useForm({

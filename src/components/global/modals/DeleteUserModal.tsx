@@ -15,26 +15,29 @@ import { useState, useEffect } from "react";
 interface CreateServerModalProps {
   opened: boolean;
   onClose: () => void;
+  handle: string;
   handleDelete: () => void;
-  serverName: string;
+
 }
 
-export const DeleteServerModal = ({
+export const DeleteUserModal = ({
   opened,
   onClose,
-  serverName,
-  handleDelete,
+  handle,
+  handleDelete
 }: CreateServerModalProps) => {
   const [typedName, setTypedName] = useState<string>("");
   const [disabled, setDisabled] = useState<boolean>(true);
 
   useEffect(() => {
-    if (typedName === serverName) {
+    console.log(typedName)
+    console.log(handle)
+    if (typedName === handle) {
       setDisabled(false);
     } else {
       setDisabled(true);
     }
-  }, [serverName, typedName]);
+  }, [handle, typedName]);
 
 
   const handleClick = () => {
@@ -46,7 +49,7 @@ export const DeleteServerModal = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={`Delete Server: ${serverName}`}
+      title={`Delete User: ${handle} `}
       className="text-bold"
       centered
       radius="md"
@@ -55,8 +58,7 @@ export const DeleteServerModal = ({
         <Center>
           <Stack>
           <Text size="lg" fw={500} className="">
-            Type server name below and click Delete to confirm deletion of "
-            {serverName}".
+            Type display name below and click Delete to confirm deletion of "{handle}".
           </Text>
           <Text size="lg">
           This is <span className="underline text-red-500">NOT</span> reversible.
@@ -66,12 +68,13 @@ export const DeleteServerModal = ({
         <Stack mt={20}>
           <TextInput
             required
-            label="Server Name"
-            placeholder="Your server's name"
+            label="Display Name"
+            placeholder="Your display name"
             value={typedName}
             onChange={(event) => setTypedName(event.target.value)}
             radius="md"
           />
+
         </Stack>
         <Box mt="lg" style={{ display: "flex", justifyContent: "flex-end" }}>
           <Button

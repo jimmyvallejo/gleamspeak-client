@@ -9,6 +9,7 @@ import {
   Divider,
   Stack,
   Textarea,
+  MantineTheme,
 } from "@mantine/core";
 
 import { useContext } from "react";
@@ -16,8 +17,11 @@ import { AuthContext } from "../../../contexts/AuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "../../../hooks/useApi";
 import { notifications } from "@mantine/notifications";
+import { DeleteUserModal } from "../modals/DeleteUserModal";
+import { useDisclosure } from "@mantine/hooks";
 
 interface SettingsFormProps extends PaperProps {
+  id: string,
   firstName: string;
   lastName: string;
   email: string;
@@ -27,6 +31,7 @@ interface SettingsFormProps extends PaperProps {
 }
 
 export const SettingsForm = ({
+  id,
   email,
   firstName,
   lastName,
@@ -36,8 +41,10 @@ export const SettingsForm = ({
   ...PaperProps
 }: SettingsFormProps) => {
   const auth = useContext(AuthContext);
+  const [opened, { open, close }] = useDisclosure(false);
   const api = useApi();
   const queryClient = useQueryClient();
+
 
   const form = useForm({
     initialValues: {
@@ -113,6 +120,31 @@ export const SettingsForm = ({
     });
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: async () => {
+      if (!auth) throw new Error("Auth context not available");
+      await api.delete(`/v1/users/${id}`);
+    },
+    onSuccess: () => {
+      auth?.logout()
+      notifications.show({
+        message: "Successfully deleted user",
+        color: "green",
+      });
+    },
+    onError: (error) => {
+      console.error("Deletion failed:", error);
+      notifications.show({
+        message: "Failed to delete user",
+        color: "red",
+      });
+    },
+  });
+
+  const handleDelete = () => {
+    deleteUserMutation.mutate();
+  };
+
   return (
     <Paper radius="md" p="xl" withBorder {...PaperProps}>
       <Divider label="Update Profile" labelPosition="center" my="md" />
@@ -177,6 +209,30 @@ export const SettingsForm = ({
           </Button>
         </Group>
       </form>
+      <Divider
+        label="Danger Zone"
+        labelPosition="center"
+        my="md"
+        styles={(theme) => ({
+          label: {
+            color: theme.colors.red[6],
+          },
+        })}
+      />
+      <Group justify="end" mt="xl">
+        <Button
+          onClick={() => open()}
+          radius="xl"
+          styles={(theme: MantineTheme) => ({
+            root: {
+              backgroundColor: theme.colors.red[7],
+            },
+          })}
+        >
+          {upperFirst("Delete Account")}
+        </Button>
+      </Group>
+      <DeleteUserModal handleDelete={handleDelete} handle={handle} opened={opened} onClose={close} />
     </Paper>
   );
 };

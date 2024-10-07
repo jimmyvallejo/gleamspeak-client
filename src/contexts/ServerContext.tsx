@@ -1,11 +1,15 @@
 import {
   createContext,
   useState,
+  useContext,
+  useEffect,
   ReactNode,
   FC,
   Dispatch,
   SetStateAction,
 } from "react";
+import { AuthContext } from "./AuthContext";
+
 
 type ServerContextType = {
   serverID: string | null;
@@ -30,6 +34,18 @@ export const ServerProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [serverName, setServerName] = useState<string |null>(null)
   const [serverCode, setServerCode] = useState<string | null>(null)
   const [serverBanner, setServerBanner] = useState<string | null>(null)
+
+  const auth = useContext(AuthContext)
+
+  useEffect(() => {
+    if(!auth?.isAuthenticated){
+      setServerID(null)
+      setOwnerID(null)
+      setServerName(null)
+      setServerCode(null)
+      setServerBanner(null)
+    }
+  },[auth?.isAuthenticated])
 
   const contextValue: ServerContextType = {
     serverID,

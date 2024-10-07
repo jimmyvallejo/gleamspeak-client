@@ -1,4 +1,3 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
@@ -10,26 +9,24 @@ import { WebSocketProvider } from "./contexts/WebSocketContext.tsx";
 import App from "./App.tsx";
 import "./App.css";
 import "@mantine/core/styles.css";
-import "@mantine/notifications/styles.css"; 
-import '@mantine/carousel/styles.css';
+import "@mantine/notifications/styles.css";
+import "@mantine/carousel/styles.css";
 
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <MantineProvider defaultColorScheme="dark">
-          <Notifications />
-          <AuthProvider>
-            <WebSocketProvider>
-              <ServerProvider>
-                <App />
-              </ServerProvider>
-            </WebSocketProvider>
-          </AuthProvider>
-        </MantineProvider>
-      </Router>
-    </QueryClientProvider>
-  </React.StrictMode>
+  <QueryClientProvider client={queryClient}>
+    <Router>
+      <MantineProvider defaultColorScheme="dark">
+        <Notifications />
+        <AuthProvider>
+          <WebSocketProvider>
+            <ServerProvider>
+              <App />
+            </ServerProvider>
+          </WebSocketProvider>
+        </AuthProvider>
+      </MantineProvider>
+    </Router>
+  </QueryClientProvider>
 );
