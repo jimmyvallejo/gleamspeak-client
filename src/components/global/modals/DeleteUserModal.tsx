@@ -30,8 +30,6 @@ export const DeleteUserModal = ({
   const [disabled, setDisabled] = useState<boolean>(true);
 
   useEffect(() => {
-    console.log(typedName)
-    console.log(handle)
     if (typedName === handle) {
       setDisabled(false);
     } else {
