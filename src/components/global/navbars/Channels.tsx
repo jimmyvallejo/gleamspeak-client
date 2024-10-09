@@ -6,20 +6,23 @@ import {
   Divider,
   Text,
   Group,
-  Tooltip
+  Tooltip,
+  List,
+  ListItem,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconHome2,
-  IconPlus,
   IconCopy,
   IconSettings,
+  IconMessage2,
+  IconHeadphones,
 } from "@tabler/icons-react";
 import classes from "./Channel.module.css";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { ServerContext } from "../../../contexts/ServerContext";
-import { useContext, useState, useEffect } from "react";
-import { CreateTextChannel } from "../modals/CreateTextChannelModal";
+import { useContext, useState, useEffect, useRef } from "react";
+import { CreateChannelModal } from "../modals/CreateChannelModal";
 import { useApi } from "../../../hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -37,7 +40,12 @@ interface NavbarChannelProps {
   active?: boolean;
 }
 
-type channel = {
+export type Member = {
+  user_id: string;
+  handle: string;
+};
+
+export type Channel = {
   channel_id: string;
   owner_id: string;
   server_id: string;
@@ -47,26 +55,21 @@ type channel = {
   is_locked: boolean;
   channel_created_at: string;
   channel_updated_at: string;
+  members: Member[];
 };
 
 const channels = [
   {
     emoji: "💬",
     value: "Text",
-    description:
-      "Crisp and refreshing fruit. Apples are known for their versatility and nutritional benefits. They come in a variety of flavors and are great for snacking, baking, or adding to salads.",
   },
   {
     emoji: "🔊",
     value: "Voice",
-    description:
-      "Naturally sweet and potassium-rich fruit. Bananas are a popular choice for their energy-boosting properties and can be enjoyed as a quick snack, added to smoothies, or used in baking.",
   },
   {
     emoji: "🔴",
     value: "Video",
-    description:
-      "Nutrient-packed green vegetable. Broccoli is packed with vitamins, minerals, and fiber. It has a distinct flavor and can be enjoyed steamed, roasted, or added to stir-fries.",
   },
 ];
 
@@ -86,7 +89,10 @@ export function Channels() {
   const auth = useContext(AuthContext);
   const server = useContext(ServerContext);
   const [opened, { open, close }] = useDisclosure(false);
-  const [active, setActive] = useState<number | null>(null);
+  const [textActive, setTextActive] = useState<number | null>(null);
+  const [voiceActive, setVoiceActive] = useState<number | null>(null);
+  const [isTextModal, setIsTextModal] = useState<boolean>(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const navigate = useNavigate();
 
@@ -105,7 +111,17 @@ export function Channels() {
     }
   };
 
-  const { data, error } = useQuery({
+  const fetchUserVoiceChannels = async () => {
+    try {
+      const response = await api.get(`/v1/channels/voice/${server?.serverID}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching user servers:", error);
+      throw error;
+    }
+  };
+
+  const { data: text, error: textError } = useQuery({
     queryKey: ["userTextChannels", server?.serverID],
     queryFn: fetchUserTextChannels,
     staleTime: Infinity,
@@ -115,10 +131,36 @@ export function Channels() {
     enabled: !!auth?.user && !!server?.serverID,
   });
 
-  const handleChannel = (index: number, id: string) => {
-    setActive(index);
+  const handleTextChannel = (index: number, id: string) => {
+    setTextActive(index);
     queryClient.invalidateQueries({ queryKey: ["channelMessages"] });
     ws.setTextRoom(id);
+  };
+
+  const { data: voice, error: voiceError } = useQuery({
+    queryKey: ["userVoiceChannels"],
+    queryFn: fetchUserVoiceChannels,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    enabled: !!auth?.user && !!server?.serverID,
+  });
+
+  useEffect(() => {
+    if (voice) {
+      console.log("Fetched voice channels:", voice.channels);
+      ws.setVoiceChannels(voice.channels);
+    } else {
+      console.error("Invalid voice channels data:", voice);
+    }
+  }, [voice]);
+
+  const handleVoiceChannel = (channel: Channel, index: number) => {
+    setVoiceActive(index);
+    ws.setVoiceRoom(channel.channel_id);
+    ws.changeVoiceRoom(server?.serverID, channel.channel_id);
+    togglePlay();
   };
 
   const handleCopy = () => {
@@ -132,9 +174,25 @@ export function Channels() {
   };
 
   useEffect(() => {
-    setActive(null);
+    setTextActive(null);
   }, [server?.serverID]);
 
+  const openVoiceModal = () => {
+    setIsTextModal(false);
+    open();
+  };
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current
+        .play()
+        .catch((error) => console.error("Error playing audio:", error));
+    }
+  };
+
+  console.log(voice);
   const TextChannels = (
     <Accordion.Item
       className="w-full"
@@ -145,36 +203,77 @@ export function Channels() {
         {channels[0].value}
       </Accordion.Control>
       <Accordion.Panel className="w-full">
-        {data?.channels.map((channel: channel, index: number) => (
+        {text?.channels.map((channel: Channel, index: number) => (
           <Link
-            key={channel.channel_id}
+            key={channel?.channel_id}
             className="no-underline text-inherit w-full"
-            to={`/chat/${channel.channel_id}`}
+            to={`/chat/${channel?.channel_id}`}
           >
             <div
-              onClick={() => handleChannel(index, channel.channel_id)}
-              className={`rounded-md ${active === index ? "bg-[#262626]" : ""}`}
+              onClick={() => handleTextChannel(index, channel?.channel_id)}
+              className={`flex items-center rounded-md ${
+                textActive === index ? "bg-[#262626]" : ""
+              } h-[2rem] mt-2`}
             >
-              <p className="text-[17px] px-4 py-1">
+              <p className="text-[17px] px-4 ">
                 {" "}
-                # {channel.channel_name.slice(0, 15)}
+                <span className="mr-2">#</span>
+                {channel?.channel_name.slice(0, 15)}
               </p>
             </div>
           </Link>
         ))}
-        {error && <p className="text-red-300">Text channels failed to load</p>}
+        {textError && (
+          <p className="text-red-300">Text channels failed to load</p>
+        )}
       </Accordion.Panel>
     </Accordion.Item>
   );
+
   const VoiceChannels = (
     <Accordion.Item key={channels[1].value} value={channels[1].value}>
       <Accordion.Control icon={channels[1].emoji}>
         {channels[1].value}
       </Accordion.Control>
       <Accordion.Panel>
-        {data?.channels.map((channel: channel) => (
-          <p key={channel.channel_id}>{channel.channel_name}</p>
-        ))}
+        {ws.voiceChannels && ws.voiceChannels.length > 0 ? (
+          ws.voiceChannels.map((channel: Channel, index: number) => (
+            <div
+              key={channel.channel_id}
+              className={`flex flex-col ${
+                voiceActive === index ? "bg-[#262626]" : ""
+              } rounded-md`}
+            >
+              <div
+                onClick={() => handleVoiceChannel(channel, index)}
+                className={`flex items-center rounded-md cursor-pointer mt-2`}
+              >
+                <p className="text-[17px] px-3">
+                  <span className="mr-2 text-sm">🎧</span>
+                  {channel.channel_name}
+                </p>
+              </div>
+              <div className="ml-[2rem] mb-5">
+                <List>
+                  {channel.members && channel.members.length > 0 ? (
+                    channel.members.map((member: Member, index: number) => (
+                      <ListItem className="pt-2" key={index}>
+                        {member.handle}
+                      </ListItem>
+                    ))
+                  ) : (
+                    <ListItem>No members in this channel</ListItem>
+                  )}
+                </List>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p>No voice channels available</p>
+        )}
+        {voiceError && (
+          <p className="text-red-300">Voice channels failed to load</p>
+        )}
       </Accordion.Panel>
     </Accordion.Item>
   );
@@ -185,7 +284,7 @@ export function Channels() {
         {channels[2].value}
       </Accordion.Control>
       <Accordion.Panel>
-        {data?.channels.map((channel: channel) => (
+        {text?.channels.map((channel: Channel) => (
           <p key={channel.channel_id}>{channel.channel_name}</p>
         ))}
       </Accordion.Panel>
@@ -201,44 +300,61 @@ export function Channels() {
             backgroundImage: `url(${server?.serverBanner})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            minHeight: "150px", 
+            minHeight: "150px",
           }}
         >
-          <div className={`absolute inset-0 ${server?.serverBanner ? "bg-black" : ""} bg-opacity-50`} />{" "}
+          <div
+            className={`absolute inset-0 ${
+              server?.serverBanner ? "bg-black" : ""
+            } bg-opacity-50`}
+          />{" "}
           <div className="relative z-10 text-white">
             {" "}
             <div className="flex items-center mb-2">
-            <Tooltip label={server?.serverName} position="top" transitionProps={{ duration: 0 }}>
-              <h3 className="text-xl font-bold min-w-[84%]">
-                Server: {server?.serverName
-                  ? server.serverName.length > 10
-                    ? server.serverName.slice(0, 10) + "..."
-                    : server.serverName
-                  : ""}
-              </h3>
+              <Tooltip
+                label={server?.serverName}
+                position="top"
+                transitionProps={{ duration: 0 }}
+              >
+                <h3 className="text-xl font-bold min-w-[84%]">
+                  Server:{" "}
+                  {server?.serverName
+                    ? server.serverName.length > 10
+                      ? server.serverName.slice(0, 10) + "..."
+                      : server.serverName
+                    : ""}
+                </h3>
               </Tooltip>
               {auth?.user?.id === server?.ownerID && (
                 <div className="flex items-center">
-                 <Tooltip label={"Server Settings"} position="right" transitionProps={{ duration: 0 }}>
-                <IconSettings
-                  size="1.3rem"
-                  className="cursor-pointer hover:text-blue-300 active:text-blue-500 transition-colors ml-2"
-                  onClick={() =>
-                    navigate(`/server-settings/${server?.serverID}`)
-                  }
-                />
-                </Tooltip>
+                  <Tooltip
+                    label={"Server Settings"}
+                    position="right"
+                    transitionProps={{ duration: 0 }}
+                  >
+                    <IconSettings
+                      size="1.3rem"
+                      className="cursor-pointer hover:text-blue-300 active:text-blue-500 transition-colors ml-2"
+                      onClick={() =>
+                        navigate(`/server-settings/${server?.serverID}`)
+                      }
+                    />
+                  </Tooltip>
                 </div>
               )}
             </div>
             <Group justify="space-between">
               <Text>Code: {server?.serverCode}</Text>
-              <Tooltip label={"Copy"} position="right" transitionProps={{ duration: 0 }}>
-              <IconCopy
-                size="1.2rem"
-                className="cursor-pointer hover:text-blue-300 active:text-blue-500 transition-colors"
-                onClick={handleCopy}
-              />
+              <Tooltip
+                label={"Copy"}
+                position="right"
+                transitionProps={{ duration: 0 }}
+              >
+                <IconCopy
+                  size="1.2rem"
+                  className="cursor-pointer hover:text-blue-300 active:text-blue-500 transition-colors"
+                  onClick={handleCopy}
+                />
               </Tooltip>
             </Group>
           </div>
@@ -246,14 +362,23 @@ export function Channels() {
 
         <div className={classes.navbarMain}>
           <Divider variant="" className="w-[100%]" my="xs" />
-          <div className=" flex items-center mr-5">
+          <div className="flex items-center mr-6 h-[3rem]">
             <Server
               serverID={null}
-              icon={IconPlus}
+              icon={IconMessage2}
               label="Create Channel"
               onClick={open}
             />
             <h5 className="ml-1">Create Text Channel</h5>
+          </div>
+          <div className=" flex items-center mr-4 h-[3rem]">
+            <Server
+              serverID={null}
+              icon={IconHeadphones}
+              label="Create Channel"
+              onClick={openVoiceModal}
+            />
+            <h5 className="ml-1">Create Voice Channel</h5>
           </div>
           <Accordion variant="seperated" defaultValue="Text" className="w-full">
             {TextChannels}
@@ -262,11 +387,16 @@ export function Channels() {
           </Accordion>
         </div>
       </nav>
-      <CreateTextChannel
+      <CreateChannelModal
         serverID={server?.serverID}
         opened={opened}
-        onClose={close}
+        onClose={() => {
+          close();
+          setTimeout(() => setIsTextModal(true), 500);
+        }}
+        isText={isTextModal}
       />
+      <audio ref={audioRef} src="/ding.wav"></audio>
     </>
   );
 }

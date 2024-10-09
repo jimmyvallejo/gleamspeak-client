@@ -19,17 +19,19 @@ import { notifications } from "@mantine/notifications";
 import { languages } from "../../../constants/constants";
 import { useQueryClient } from "@tanstack/react-query";
 
-interface CreateTextChannelModalProps {
+interface CreateChannelModalProps {
   opened: boolean;
   serverID: string | null | undefined;
   onClose: () => void;
+  isText: boolean;
 }
 
-export function CreateTextChannel({
+export function CreateChannelModal({
   opened,
   onClose,
   serverID,
-}: CreateTextChannelModalProps) {
+  isText,
+}: CreateChannelModalProps) {
   const auth = useContext(AuthContext);
   const api = useApi();
 
@@ -51,7 +53,7 @@ export function CreateTextChannel({
     },
   });
 
-  const createServerMutation = useMutation({
+  const createTextChannelMutation = useMutation({
     mutationFn: async ({
       channelName,
       language,
@@ -89,11 +91,60 @@ export function CreateTextChannel({
     },
   });
 
-  const handleCreateChannel = form.onSubmit((values) => {
+  const createVoiceChannelMutation = useMutation({
+    mutationFn: async ({
+      channelName,
+      language,
+      serverID,
+    }: {
+      channelName: string;
+      language: string;
+      serverID: string | null | undefined;
+    }) => {
+      if (!auth) throw new Error("Auth context not available");
+      const data = {
+        channel_name: channelName,
+        language: language,
+        server_id: serverID,
+      };
+      const response = await api.post(`/v1/channels/voice`, data);
+      return response.data;
+    },
+    onSuccess: (response) => {
+      console.log("Channel creation successful:", response);
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: ["userVoiceChannels"] });
+      onClose();
+      notifications.show({
+        message: "Channel Creation Successful",
+        color: "green",
+      });
+    },
+    onError: (error: Error) => {
+      console.error("Channel creation failed:", error);
+      form.setErrors({
+        server_name: error.message || "Channel creation failed.",
+      });
+      notifications.show({ message: "Channel Creation Failed", color: "red" });
+    },
+  });
+
+  const handleCreateTextChannel = form.onSubmit((values) => {
     if (form.validate().hasErrors) {
       return;
     }
-    createServerMutation.mutate({
+    createTextChannelMutation.mutate({
+      channelName: values.channel_name,
+      language: values.language,
+      serverID: serverID,
+    });
+  });
+
+  const handleCreateVoiceChannel = form.onSubmit((values) => {
+    if (form.validate().hasErrors) {
+      return;
+    }
+    createVoiceChannelMutation.mutate({
       channelName: values.channel_name,
       language: values.language,
       serverID: serverID,
@@ -104,7 +155,7 @@ export function CreateTextChannel({
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Create Text Channel"
+      title={isText? "Create Text Channel" : "Create Voice Channel"}
       className="text-bold"
       centered
     >
@@ -114,7 +165,7 @@ export function CreateTextChannel({
             Set name and select language
           </Text>
         </Center>
-        <form onSubmit={handleCreateChannel} className="mt-10">
+        <form onSubmit={isText ? handleCreateTextChannel: handleCreateVoiceChannel} className="mt-10">
           <Stack>
             <TextInput
               required
@@ -144,7 +195,7 @@ export function CreateTextChannel({
             <Button
               type="submit"
               radius="xxl"
-              loading={createServerMutation.isPending}
+              loading={createTextChannelMutation.isPending}
             >
               {upperFirst("Create")}
             </Button>

@@ -2,7 +2,6 @@ import { createContext, useState, useEffect, ReactNode, FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 
 export type user = {
   id: string;
@@ -22,6 +21,7 @@ type AuthContextType = {
   ) => Promise<void>;
   checkAuthStatus: () => Promise<void>;
   logout: () => void;
+  leaveCurrentVoiceChannel: () => void;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -90,17 +90,44 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setUser(null);
     }
   };
-  const logout = () => {
-    axios.post(`/v1/logout`);
-    navigate("/auth");
-    setIsAuthenticated(false);
-    setUser(null);
-    queryClient.clear();
+
+  const leaveCurrentVoiceChannel = async () => {
+    try {
+      await api.delete(`/v1/channels/voice/${user?.id}`);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const logout = async () => {
+    try {
+      await leaveCurrentVoiceChannel();
+      await api.post(`/v1/logout`);
+    } catch (error) {
+      console.error("Error during logout:", error);
+    } finally {
+      navigate("/auth");
+      setIsAuthenticated(false);
+      setUser(null);
+      queryClient.clear();
+    }
   };
 
   useEffect(() => {
     checkAuthStatus();
-  }, []);
+
+    const handleBeforeUnload = async (event: BeforeUnloadEvent) => {
+      if (isAuthenticated) {
+        event.preventDefault();
+        await leaveCurrentVoiceChannel();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     console.log(user);
@@ -113,6 +140,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     createStandard,
     checkAuthStatus,
     logout,
+    leaveCurrentVoiceChannel
   };
 
   return (

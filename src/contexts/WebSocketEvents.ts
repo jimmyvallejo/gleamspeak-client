@@ -1,3 +1,4 @@
+import { Member } from "../components/global/navbars/Channels";
 interface EventPayload {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
@@ -11,6 +12,12 @@ interface EventPayload {
       this.type = type;
       this.payload = payload;
     }
+  }
+
+  export type AddVoiceMemberPayload = {
+    channel_id: string;
+    member: Member;
+
   }
   class SendMessageEvent {
     message: string | null;
@@ -36,6 +43,25 @@ interface EventPayload {
       this.avatar = avatar;
     }
   }
+
+  class AddVoiceMemberEvent {
+    user_id: string | null | undefined;
+    channel_id: string | null;
+    server_id: string | null;
+    handle: string | null | undefined;
+  
+    constructor(
+      user_id: string | null | undefined,
+      channel_id: string | null,
+      server_id: string | null,
+      handle: string | null | undefined
+    ) {
+      this.user_id = user_id;
+      this.channel_id = channel_id;
+      this.server_id = server_id;
+      this.handle = handle
+    }
+  }
   
   class ChangeChatRoomEvent {
     id: string;
@@ -45,9 +71,18 @@ interface EventPayload {
     }
   }
 
+  class ChangeVoiceRoomEvent {
+    id: string | null;
+  
+    constructor(name: string | null) {
+      this.id = name;
+    }
+  }
 
   export {
     Event,
     SendMessageEvent,
     ChangeChatRoomEvent,
+    ChangeVoiceRoomEvent,
+    AddVoiceMemberEvent,
   }
