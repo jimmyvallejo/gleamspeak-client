@@ -161,25 +161,19 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setVoiceChannels((prevChannels) => {
       if (!prevChannels || !Array.isArray(prevChannels)) {
-        console.error("prevChannels is not an array:", prevChannels);
         return [];
       }
 
       const updatedChannels = prevChannels.map((channel) => {
         if (channel && channel.channel_id === payload?.channel_id) {
-          console.log(`Updating channel ${channel.channel_id}`);
           const updatedChannel = {
             ...channel,
             members: [...(channel.members || []), payload.member],
           };
-          console.log("Updated channel:", updatedChannel);
           return updatedChannel;
         }
         return channel;
       });
-
-      console.log("Previous channels:", prevChannels);
-      console.log("Updated channels:", updatedChannels);
 
       const channelUpdated = updatedChannels.some(
         (channel, index) => channel !== prevChannels[index]
@@ -196,11 +190,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const handleRemoveVoiceRoomMember = (payload: EventPayload) => {
-    console.log("Remove member payload", payload);
-  
     setVoiceChannels((prevChannels) => {
       if (!prevChannels || !Array.isArray(prevChannels)) {
-        console.error("prevChannels is not an array:", prevChannels);
         return [];
       }
   
@@ -209,17 +200,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
           const updatedMembers = channel.members.filter(
             (member) => member.user_id !== payload.member.user_id
           );
-  
+
           if (updatedMembers.length !== channel.members.length) {
-            console.log(`Removed member from channel ${channel.channel_id}`);
             return { ...channel, members: updatedMembers };
           }
         }
         return channel;
       });
-  
-      console.log("Previous channels:", prevChannels);
-      console.log("Updated channels:", updatedChannels);
   
       const channelUpdated = updatedChannels.some(
         (channel, index) => 
@@ -313,6 +300,26 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         handle
       );
       sendEvent("add_voice_member", outgoingEvent);
+    } else {
+      console.error("WebSocket is not connected or invalid user/message");
+      throw Error;
+    }
+  };
+
+  const removeVoiceMember = (
+    user_id: string | null | undefined,
+    channel_id: string | null,
+    server_id: string | null,
+    handle: string | null | undefined
+  ) => {
+    if (socket && connected) {
+      const outgoingEvent = new AddVoiceMemberEvent(
+        user_id,
+        channel_id,
+        server_id,
+        handle
+      );
+      sendEvent("remove_voice_member", outgoingEvent);
     } else {
       console.error("WebSocket is not connected or invalid user/message");
       throw Error;

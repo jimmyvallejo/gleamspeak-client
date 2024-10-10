@@ -294,7 +294,7 @@ export function Channels() {
 
   return (
     <>
-      <nav className={`${classes.navbar} max-h-[94vh] overflow-y-auto`}>
+      <nav className={`${classes.navbar} h-[94vh] overflow-y-auto`}>
         <Center
           className="flex flex-col items-center w-full relative"
           style={{
@@ -384,7 +384,7 @@ export function Channels() {
           <Accordion
             multiple
             variant="seperated"
-            defaultValue={["Text", "Voice", "Video"]}
+            defaultValue={["Text"]}
             className="w-full"
           >
             {TextChannels}
