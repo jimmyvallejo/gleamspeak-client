@@ -138,7 +138,7 @@ export function Channels() {
   };
 
   const { data: voice, error: voiceError } = useQuery({
-    queryKey: ["userVoiceChannels"],
+    queryKey: ["userVoiceChannels", server?.serverID],
     queryFn: fetchUserVoiceChannels,
     staleTime: Infinity,
     gcTime: Infinity,
@@ -175,6 +175,7 @@ export function Channels() {
 
   useEffect(() => {
     setTextActive(null);
+    setVoiceActive(null)
   }, [server?.serverID]);
 
   const openVoiceModal = () => {
@@ -262,7 +263,7 @@ export function Channels() {
                       </ListItem>
                     ))
                   ) : (
-                    <ListItem>No members in this channel</ListItem>
+                    <ListItem>Empty</ListItem>
                   )}
                 </List>
               </div>
@@ -293,7 +294,7 @@ export function Channels() {
 
   return (
     <>
-      <nav className={classes.navbar}>
+      <nav className={`${classes.navbar} max-h-[94vh] overflow-y-auto`}>
         <Center
           className="flex flex-col items-center w-full relative"
           style={{
@@ -380,7 +381,12 @@ export function Channels() {
             />
             <h5 className="ml-1">Create Voice Channel</h5>
           </div>
-          <Accordion variant="seperated" defaultValue="Text" className="w-full">
+          <Accordion
+            multiple
+            variant="seperated"
+            defaultValue={["Text", "Voice", "Video"]}
+            className="w-full"
+          >
             {TextChannels}
             {VoiceChannels}
             {VideoChannels}

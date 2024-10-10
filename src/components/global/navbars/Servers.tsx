@@ -18,6 +18,7 @@ import { useApi } from "../../../hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
 import { useWebSocket } from "../../../hooks/useWebsocket";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface NavbarServerProps {
   icon: typeof IconHome2 | string;
@@ -76,21 +77,22 @@ function ServerItem({
 export function Servers() {
   const auth = useContext(AuthContext);
   const servers = useContext(ServerContext);
-  const navigate = useNavigate();
-
   const [
     createServerOpened,
     { open: openCreateServer, close: closeCreateServer },
   ] = useDisclosure(false);
 
-  const [joinServerOpened, { open: openJoinServer, close: closeJoinServer }] =
-    useDisclosure(false);
-
   const ws = useWebSocket();
 
-  const { setChannelMessages } = ws;
+  const [joinServerOpened, { open: openJoinServer, close: closeJoinServer }] =
+    useDisclosure(false);
+    const { setChannelMessages } = ws;
 
   const api = useApi();
+
+  const queryClient = useQueryClient();
+
+  const navigate = useNavigate();
 
   const fetchUserServers = async () => {
     try {
@@ -118,6 +120,7 @@ export function Servers() {
     servers?.setOwnerID(server.owner_id);
     servers?.setServerBanner(server.banner_url);
     setChannelMessages([]);
+    auth?.leaveCurrentVoiceChannel();
     navigate("/");
   };
 

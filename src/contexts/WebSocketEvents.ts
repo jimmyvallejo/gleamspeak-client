@@ -66,16 +66,24 @@ interface EventPayload {
   class ChangeChatRoomEvent {
     id: string;
   
-    constructor(name: string) {
-      this.id = name;
+    constructor(id: string) {
+      this.id = id;
     }
   }
 
   class ChangeVoiceRoomEvent {
     id: string | null;
   
-    constructor(name: string | null) {
-      this.id = name;
+    constructor(id: string | null) {
+      this.id = id;
+    }
+  }
+
+  class ChangeServerEvent {
+    id: string | null;
+  
+    constructor(id: string | null) {
+      this.id = id;
     }
   }
 
@@ -85,4 +93,5 @@ interface EventPayload {
     ChangeChatRoomEvent,
     ChangeVoiceRoomEvent,
     AddVoiceMemberEvent,
+    ChangeServerEvent
   }

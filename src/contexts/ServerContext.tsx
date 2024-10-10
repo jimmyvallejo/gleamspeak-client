@@ -9,6 +9,7 @@ import {
   SetStateAction,
 } from "react";
 import { AuthContext } from "./AuthContext";
+import { useWebSocket } from "../hooks/useWebsocket";
 
 
 type ServerContextType = {
@@ -36,6 +37,7 @@ export const ServerProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [serverBanner, setServerBanner] = useState<string | null>(null)
 
   const auth = useContext(AuthContext)
+  const ws = useWebSocket()
 
   useEffect(() => {
     if(!auth?.isAuthenticated){
@@ -46,6 +48,10 @@ export const ServerProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setServerBanner(null)
     }
   },[auth?.isAuthenticated])
+
+  useEffect(() => {
+    ws.changeServer(serverID)
+  },[serverID])
 
   const contextValue: ServerContextType = {
     serverID,

@@ -98,6 +98,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       console.error(error);
     }
   };
+  
   const logout = async () => {
     try {
       await leaveCurrentVoiceChannel();
