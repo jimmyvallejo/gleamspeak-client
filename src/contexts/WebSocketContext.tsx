@@ -67,8 +67,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
+    if (!auth?.user?.id) {
+      console.error("User ID is not available");
+      return;
+    }
+
     setConnectionError(null);
-    const ws = new WebSocket("ws://localhost:8080/ws");
+    const ws = new WebSocket(
+      `ws://localhost:8080/ws?userId=${auth.user.id}&handle=${auth.user.handle}`
+    );
 
     ws.onopen = () => {
       console.log("WebSocket connected");
@@ -92,9 +99,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       setConnectionError(
         `Connection closed: ${event.reason || "Unknown reason"}`
       );
-      if (auth?.user) {
-        setTimeout(connectWebSocket, 5000);
-      }
     };
 
     ws.onerror = (error) => {
@@ -158,7 +162,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const handleNewVoiceRoomMember = (payload: EventPayload) => {
-
     setVoiceChannels((prevChannels) => {
       if (!prevChannels || !Array.isArray(prevChannels)) {
         return [];
@@ -194,7 +197,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!prevChannels || !Array.isArray(prevChannels)) {
         return [];
       }
-  
+
       const updatedChannels = prevChannels.map((channel) => {
         if (channel && Array.isArray(channel.members)) {
           const updatedMembers = channel.members.filter(
@@ -207,20 +210,20 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         return channel;
       });
-  
+
       const channelUpdated = updatedChannels.some(
-        (channel, index) => 
-          channel.members && 
-          prevChannels[index].members && 
+        (channel, index) =>
+          channel.members &&
+          prevChannels[index].members &&
           channel.members.length !== prevChannels[index].members.length
       );
-  
+
       if (!channelUpdated) {
         console.warn(
           "No channel was updated. Member not found in any channel."
         );
       }
-  
+
       return updatedChannels;
     });
   };
@@ -300,26 +303,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         handle
       );
       sendEvent("add_voice_member", outgoingEvent);
-    } else {
-      console.error("WebSocket is not connected or invalid user/message");
-      throw Error;
-    }
-  };
-
-  const removeVoiceMember = (
-    user_id: string | null | undefined,
-    channel_id: string | null,
-    server_id: string | null,
-    handle: string | null | undefined
-  ) => {
-    if (socket && connected) {
-      const outgoingEvent = new AddVoiceMemberEvent(
-        user_id,
-        channel_id,
-        server_id,
-        handle
-      );
-      sendEvent("remove_voice_member", outgoingEvent);
     } else {
       console.error("WebSocket is not connected or invalid user/message");
       throw Error;
