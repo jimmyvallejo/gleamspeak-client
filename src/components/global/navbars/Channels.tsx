@@ -17,6 +17,7 @@ import {
   IconSettings,
   IconMessage2,
   IconHeadphones,
+  IconTrash,
 } from "@tabler/icons-react";
 import classes from "./Channel.module.css";
 import { AuthContext } from "../../../contexts/AuthContext";
@@ -24,7 +25,7 @@ import { ServerContext } from "../../../contexts/ServerContext";
 import { useContext, useState, useEffect, useRef } from "react";
 import { CreateChannelModal } from "../modals/CreateChannelModal";
 import { useApi } from "../../../hooks/useApi";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useWebSocket } from "../../../hooks/useWebsocket";
 import { useQueryClient } from "@tanstack/react-query";
@@ -171,9 +172,37 @@ export function Channels() {
     }
   };
 
+  const deleteTextChannelMutation = useMutation({
+    mutationFn: async ({ channelID }: { channelID: string }) => {
+      if (!auth) throw new Error("Auth context not available");
+      await api.delete(`/v1/channels/text/${channelID}`);
+    },
+    onSuccess: (_, variables) => {
+      console.log("ChannelID:", variables.channelID);
+      console.log("Successfully deleted channel");
+      notifications.show({
+        message: "Successfully deleted channel",
+        color: "green",
+      });
+      queryClient.invalidateQueries({ queryKey: ["userTextChannels"] });
+      if (location.pathname.includes(`/chat/${variables.channelID}`)) {
+        navigate("/");
+      }
+    },
+    onError: () => {
+      notifications.show({ message: "Failed to delete channel", color: "red" });
+    },
+  });
+
+  const handleDeleteChannel = (channelID: string) => {
+    deleteTextChannelMutation.mutate({
+      channelID: channelID,
+    });
+  };
+
   useEffect(() => {
     setTextActive(null);
-    setVoiceActive(null)
+    setVoiceActive(null);
   }, [server?.serverID]);
 
   const openVoiceModal = () => {
@@ -191,7 +220,6 @@ export function Channels() {
     }
   };
 
-  console.log(voice);
   const TextChannels = (
     <Accordion.Item
       className="w-full"
@@ -203,24 +231,34 @@ export function Channels() {
       </Accordion.Control>
       <Accordion.Panel className="w-full">
         {text?.channels.map((channel: Channel, index: number) => (
-          <Link
+          <Group
             key={channel?.channel_id}
-            className="no-underline text-inherit w-full"
-            to={`/chat/${channel?.channel_id}`}
+            className={`w-full items-center ${
+              textActive === index ? "bg-[#262626]" : ""
+            } rounded-md mt-2`}
           >
-            <div
-              onClick={() => handleTextChannel(index, channel?.channel_id)}
-              className={`flex items-center rounded-md ${
-                textActive === index ? "bg-[#262626]" : ""
-              } h-[2rem] mt-2`}
+            <Link
+              className="no-underline text-inherit w-[75%]"
+              to={`/chat/${channel?.channel_id}`}
             >
-              <p className="text-[17px] px-4 ">
-                {" "}
-                <span className="mr-2">#</span>
-                {channel?.channel_name.slice(0, 15)}
-              </p>
-            </div>
-          </Link>
+              <div
+                onClick={() => handleTextChannel(index, channel?.channel_id)}
+                className={`flex items-center   h-[2rem]`}
+              >
+                <p className="text-[17px] px-4 m-0">
+                  <span className="mr-2">#</span>
+                  {channel?.channel_name.slice(0, 15)}
+                </p>
+              </div>
+            </Link>
+            {auth?.user?.id === server?.ownerID && (
+              <IconTrash
+                className="cursor-pointer wiggle-hover"
+                size={16}
+                onClick={() => handleDeleteChannel(channel?.channel_id)}
+              />
+            )}
+          </Group>
         ))}
         {textError && (
           <p className="text-red-300">Text channels failed to load</p>
@@ -243,15 +281,28 @@ export function Channels() {
                 voiceActive === index ? "bg-[#262626]" : ""
               } rounded-md`}
             >
-              <div
-                onClick={() => handleVoiceChannel(channel, index)}
-                className={`flex items-center rounded-md cursor-pointer mt-2`}
+              <Group
+                style={{
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+                className="py-2"
               >
-                <p className="text-[17px] px-3">
-                  <span className="mr-2 text-sm">🎧</span>
-                  {channel.channel_name}
-                </p>
-              </div>
+                <div
+                  onClick={() => handleVoiceChannel(channel, index)}
+                  className="flex items-center rounded-md cursor-pointer w-[75%]"
+                >
+                  <p className="text-[17px] px-3 flex items-center">
+                    <span className="mr-2 text-sm">🎧</span>
+                    {channel?.channel_name.slice(0, 15)}
+                  </p>
+                </div>
+                {/* <IconTrash
+                  className="cursor-pointer mr-3"
+                  size={16}
+                  // onClick={() => handleDelete(channel.id)}
+                /> */}
+              </Group>
               <div className="ml-[2rem] mb-5">
                 <List>
                   {channel.members && channel.members.length > 0 ? (
