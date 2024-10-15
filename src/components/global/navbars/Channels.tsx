@@ -1,3 +1,8 @@
+import { useContext, useState, useEffect, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
   Accordion,
   Center,
@@ -10,7 +15,6 @@ import {
   List,
   ListItem,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import {
   IconHome2,
   IconCopy,
@@ -19,19 +23,14 @@ import {
   IconHeadphones,
   IconTrash,
 } from "@tabler/icons-react";
-import classes from "./Channel.module.css";
+
 import { AuthContext } from "../../../contexts/AuthContext";
 import { ServerContext } from "../../../contexts/ServerContext";
-import { useContext, useState, useEffect, useRef } from "react";
-import { CreateChannelModal } from "../modals/CreateChannelModal";
 import { useApi } from "../../../hooks/useApi";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import { useWebSocket } from "../../../hooks/useWebsocket";
-import { useQueryClient } from "@tanstack/react-query";
 import { copyToClipboard } from "../../../utils/copy";
-import { notifications } from "@mantine/notifications";
-import { useNavigate } from "react-router-dom";
+import { CreateChannelModal } from "../modals/CreateChannelModal";
+import classes from "./Channel.module.css";
 
 interface NavbarChannelProps {
   icon: typeof IconHome2;
@@ -60,21 +59,12 @@ export type Channel = {
 };
 
 const channels = [
-  {
-    emoji: "💬",
-    value: "Text",
-  },
-  {
-    emoji: "🔊",
-    value: "Voice",
-  },
-  {
-    emoji: "🔴",
-    value: "Video",
-  },
+  { emoji: "💬", value: "Text" },
+  { emoji: "🔊", value: "Voice" },
+  { emoji: "🔴", value: "Video" },
 ];
 
-function Server({ icon: Icon, onClick, active }: NavbarChannelProps) {
+const Server = ({ icon: Icon, onClick, active }: NavbarChannelProps) => {
   return (
     <UnstyledButton
       onClick={onClick}
@@ -84,9 +74,9 @@ function Server({ icon: Icon, onClick, active }: NavbarChannelProps) {
       <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
     </UnstyledButton>
   );
-}
+};
 
-export function Channels() {
+export const Channels = () => {
   const auth = useContext(AuthContext);
   const server = useContext(ServerContext);
   const [opened, { open, close }] = useDisclosure(false);
@@ -94,32 +84,20 @@ export function Channels() {
   const [voiceActive, setVoiceActive] = useState<number | null>(null);
   const [isTextModal, setIsTextModal] = useState<boolean>(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
   const navigate = useNavigate();
-
   const api = useApi();
   const ws = useWebSocket();
-
   const queryClient = useQueryClient();
 
+
   const fetchUserTextChannels = async () => {
-    try {
-      const response = await api.get(`/v1/channels/${server?.serverID}`);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching user servers:", error);
-      throw error;
-    }
+    const response = await api.get(`/v1/channels/${server?.serverID}`);
+    return response.data;
   };
 
   const fetchUserVoiceChannels = async () => {
-    try {
-      const response = await api.get(`/v1/channels/voice/${server?.serverID}`);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching user servers:", error);
-      throw error;
-    }
+    const response = await api.get(`/v1/channels/voice/${server?.serverID}`);
+    return response.data;
   };
 
   const { data: text, error: textError } = useQuery({
@@ -132,12 +110,6 @@ export function Channels() {
     enabled: !!auth?.user && !!server?.serverID,
   });
 
-  const handleTextChannel = (index: number, id: string) => {
-    setTextActive(index);
-    queryClient.invalidateQueries({ queryKey: ["channelMessages"] });
-    ws.setTextRoom(id);
-  };
-
   const { data: voice, error: voiceError } = useQuery({
     queryKey: ["userVoiceChannels", server?.serverID],
     queryFn: fetchUserVoiceChannels,
@@ -145,32 +117,6 @@ export function Channels() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     enabled: !!auth?.user && !!server?.serverID,
   });
-
-  useEffect(() => {
-    if (voice) {
-      console.log("Fetched voice channels:", voice.channels);
-      ws.setVoiceChannels(voice.channels);
-    } else {
-      console.error("Invalid voice channels data:", voice);
-    }
-  }, [voice]);
-
-  const handleVoiceChannel = (channel: Channel, index: number) => {
-    setVoiceActive(index);
-    ws.setVoiceRoom(channel.channel_id);
-    ws.changeVoiceRoom(server?.serverID, channel.channel_id);
-    togglePlay();
-  };
-
-  const handleCopy = () => {
-    if (server?.serverCode) {
-      copyToClipboard(server.serverCode);
-      notifications.show({
-        message: "Copied to clipboard",
-        color: "green",
-      });
-    }
-  };
 
   const deleteTextChannelMutation = useMutation({
     mutationFn: async ({ channelID }: { channelID: string }) => {
@@ -194,16 +140,46 @@ export function Channels() {
     },
   });
 
-  const handleDeleteChannel = (channelID: string) => {
-    deleteTextChannelMutation.mutate({
-      channelID: channelID,
-    });
-  };
+  useEffect(() => {
+    if (voice) {
+      ws.setVoiceChannels(voice.channels);
+    } else {
+      console.error("Invalid voice channels data:", voice);
+    }
+  }, [voice]);
 
   useEffect(() => {
     setTextActive(null);
     setVoiceActive(null);
   }, [server?.serverID]);
+
+
+  const handleTextChannel = (index: number, id: string) => {
+    setTextActive(index);
+    queryClient.invalidateQueries({ queryKey: ["channelMessages"] });
+    ws.setTextRoom(id);
+  };
+
+  const handleVoiceChannel = (channel: Channel, index: number) => {
+    setVoiceActive(index);
+    ws.setVoiceRoom(channel.channel_id);
+    ws.changeVoiceRoom(server?.serverID, channel.channel_id);
+    togglePlay();
+  };
+
+  const handleCopy = () => {
+    if (server?.serverCode) {
+      copyToClipboard(server.serverCode);
+      notifications.show({
+        message: "Copied to clipboard",
+        color: "green",
+      });
+    }
+  };
+
+  const handleDeleteChannel = (channelID: string) => {
+    deleteTextChannelMutation.mutate({ channelID });
+  };
 
   const openVoiceModal = () => {
     setIsTextModal(false);
