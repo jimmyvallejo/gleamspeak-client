@@ -18,7 +18,6 @@ import { useApi } from "../../../hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
 import { useWebSocket } from "../../../hooks/useWebsocket";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface NavbarServerProps {
   icon: typeof IconHome2 | string;
@@ -90,7 +89,6 @@ export function Servers() {
 
   const api = useApi();
 
-  const queryClient = useQueryClient();
 
   const navigate = useNavigate();
 

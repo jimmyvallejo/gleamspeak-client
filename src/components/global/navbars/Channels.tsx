@@ -140,8 +140,6 @@ export function Channels() {
   const { data: voice, error: voiceError } = useQuery({
     queryKey: ["userVoiceChannels", server?.serverID],
     queryFn: fetchUserVoiceChannels,
-    staleTime: Infinity,
-    gcTime: Infinity,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     enabled: !!auth?.user && !!server?.serverID,
