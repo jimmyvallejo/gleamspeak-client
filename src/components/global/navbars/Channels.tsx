@@ -30,6 +30,7 @@ import { useApi } from "../../../hooks/useApi";
 import { useWebSocket } from "../../../hooks/useWebsocket";
 import { copyToClipboard } from "../../../utils/copy";
 import { CreateChannelModal } from "../modals/CreateChannelModal";
+import { DeleteTextChannelModal } from "../modals/DeleteTextChanModal";
 import classes from "./Channel.module.css";
 
 interface NavbarChannelProps {
@@ -80,15 +81,21 @@ export const Channels = () => {
   const auth = useContext(AuthContext);
   const server = useContext(ServerContext);
   const [opened, { open, close }] = useDisclosure(false);
+  const [openedDelete, { open: openDeleteChannel, close: closeDeleteChannel }] =
+    useDisclosure(false);
   const [textActive, setTextActive] = useState<number | null>(null);
   const [voiceActive, setVoiceActive] = useState<number | null>(null);
   const [isTextModal, setIsTextModal] = useState<boolean>(true);
+  const [currentChannelName, setCurrentChannelName] = useState<string | null>(
+    null
+  );
+  const [currentChannelID, setCurrentChannelID] = useState<string | null>(null);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const navigate = useNavigate();
   const api = useApi();
   const ws = useWebSocket();
   const queryClient = useQueryClient();
-
 
   const fetchUserTextChannels = async () => {
     const response = await api.get(`/v1/channels/${server?.serverID}`);
@@ -119,21 +126,22 @@ export const Channels = () => {
   });
 
   const deleteTextChannelMutation = useMutation({
-    mutationFn: async ({ channelID }: { channelID: string }) => {
+    mutationFn: async () => {
       if (!auth) throw new Error("Auth context not available");
-      await api.delete(`/v1/channels/text/${channelID}`);
+      await api.delete(`/v1/channels/text/${currentChannelID}`);
     },
-    onSuccess: (_, variables) => {
-      console.log("ChannelID:", variables.channelID);
-      console.log("Successfully deleted channel");
+    onSuccess: () => {
       notifications.show({
         message: "Successfully deleted channel",
         color: "green",
       });
+      closeDeleteChannel()
       queryClient.invalidateQueries({ queryKey: ["userTextChannels"] });
-      if (location.pathname.includes(`/chat/${variables.channelID}`)) {
+      if (location.pathname.includes(`/chat/${currentChannelID}`)) {
         navigate("/");
       }
+      setCurrentChannelID(null);
+      setCurrentChannelName(null);
     },
     onError: () => {
       notifications.show({ message: "Failed to delete channel", color: "red" });
@@ -152,7 +160,6 @@ export const Channels = () => {
     setTextActive(null);
     setVoiceActive(null);
   }, [server?.serverID]);
-
 
   const handleTextChannel = (index: number, id: string) => {
     setTextActive(index);
@@ -177,8 +184,14 @@ export const Channels = () => {
     }
   };
 
-  const handleDeleteChannel = (channelID: string) => {
-    deleteTextChannelMutation.mutate({ channelID });
+  const handleOpenDeleteModal = (channelName: string, channelID: string) => {
+    setCurrentChannelName(channelName);
+    setCurrentChannelID(channelID);
+    openDeleteChannel();
+  };
+
+  const handleChannelDelete = () => {
+    deleteTextChannelMutation.mutate();
   };
 
   const openVoiceModal = () => {
@@ -223,7 +236,7 @@ export const Channels = () => {
               >
                 <p className="text-[17px] px-4 m-0">
                   <span className="mr-2">#</span>
-                  {channel?.channel_name.slice(0, 15)}
+                  {channel?.channel_name.slice(0, 10)}
                 </p>
               </div>
             </Link>
@@ -231,7 +244,12 @@ export const Channels = () => {
               <IconTrash
                 className="cursor-pointer wiggle-hover"
                 size={16}
-                onClick={() => handleDeleteChannel(channel?.channel_id)}
+                onClick={() =>
+                  handleOpenDeleteModal(
+                    channel?.channel_name,
+                    channel?.channel_id
+                  )
+                }
               />
             )}
           </Group>
@@ -427,7 +445,19 @@ export const Channels = () => {
         }}
         isText={isTextModal}
       />
+
+      <DeleteTextChannelModal
+        opened={openedDelete}
+        channelName={currentChannelName}
+        handleDelete={handleChannelDelete}
+        onClose={() => {
+          closeDeleteChannel();
+          setTimeout(() => {
+            setCurrentChannelID(null), setCurrentChannelName(null);
+          }, 500);
+        }}
+      />
       <audio ref={audioRef} src="/ding.wav"></audio>
     </>
   );
-}
+};
