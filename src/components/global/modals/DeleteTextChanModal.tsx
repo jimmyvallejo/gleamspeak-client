@@ -11,6 +11,7 @@ import {
   MantineTheme,
 } from "@mantine/core";
 import { useState, useEffect } from "react";
+import { IconAlertTriangle } from "@tabler/icons-react";
 
 interface DeleteChannelModalProps {
   opened: boolean;
@@ -36,31 +37,38 @@ export const DeleteTextChannelModal = ({
     }
   }, [channelName, typedName]);
 
-
   const handleClick = () => {
-    handleDelete()
-    setTypedName("")
-    setDisabled(true)
-  }
+    handleDelete();
+    setTypedName("");
+    setDisabled(true);
+  };
   return (
     <Modal
       opened={opened}
       onClose={onClose}
       title={`Delete Channel: ${channelName}`}
       className="text-bold"
+      size="lg"
       centered
       radius="md"
     >
-      <Paper radius="md" p="xl" withBorder>
+      <Paper
+        radius="md"
+        p="xl"
+        withBorder
+        className="bg-gray-50"
+      >
         <Center>
           <Stack>
-          <Text size="lg" fw={500} className="">
-            Type channel name below and click Delete to confirm deletion of "
-            {channelName}".
-          </Text>
-          <Text size="lg">
-          This is <span className="underline text-red-500">NOT</span> reversible. 
-          </Text>
+            <IconAlertTriangle size={48} className="text-red-500" />
+            <Text size="lg" fw={500}>
+              Type channel name below and click Delete to confirm deletion of "
+              {channelName}".
+            </Text>
+            <Text size="lg">
+              This is <span className="underline text-red-500">NOT</span>{" "}
+              reversible.
+            </Text>
           </Stack>
         </Center>
         <Stack mt={20}>
@@ -68,6 +76,7 @@ export const DeleteTextChannelModal = ({
             required
             label="Channel Name"
             placeholder="Channel Name"
+            className="border-gray-300 dark:border-gray-600"
             value={typedName}
             onChange={(event) => setTypedName(event.target.value)}
             radius="md"

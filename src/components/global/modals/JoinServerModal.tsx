@@ -15,6 +15,7 @@ import { AuthContext } from "../../../contexts/AuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "../../../hooks/useApi";
 import { notifications } from "@mantine/notifications";
+import { IconThumbUp } from "@tabler/icons-react";
 
 interface JoinServerModalProps {
   opened: boolean;
@@ -90,14 +91,16 @@ export function JoinServerModal({ opened, onClose }: JoinServerModalProps) {
       className="text-bold"
       centered
       radius="md"
+      size="lg"
     >
       <Paper radius="md" p="xl" withBorder>
         <Center>
           <Text size="lg" fw={500} className="">
-            Enter code below to join
+            Enter Code Below To Join
           </Text>
+          <IconThumbUp size={48} className="ml-3 mb-2" />
         </Center>
-        <form onSubmit={handleCreateServer} className="mt-10">
+        <form onSubmit={handleCreateServer} className="mt-5">
           <Stack>
             <TextInput
               required

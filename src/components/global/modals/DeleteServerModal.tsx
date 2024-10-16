@@ -11,6 +11,7 @@ import {
   MantineTheme,
 } from "@mantine/core";
 import { useState, useEffect } from "react";
+import { IconAlertTriangle } from "@tabler/icons-react";
 
 interface CreateServerModalProps {
   opened: boolean;
@@ -50,10 +51,17 @@ export const DeleteServerModal = ({
       className="text-bold"
       centered
       radius="md"
+      size="lg"
     >
-      <Paper radius="md" p="xl" withBorder>
+      <Paper
+        radius="md"
+        p="xl"
+        withBorder
+        className="bg-gray-50"
+      >
         <Center>
           <Stack>
+          <IconAlertTriangle size={48} className="text-red-500" />
           <Text size="lg" fw={500} className="">
             Type server name below and click Delete to confirm deletion of "
             {serverName}".

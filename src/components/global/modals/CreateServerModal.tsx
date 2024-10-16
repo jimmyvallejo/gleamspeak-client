@@ -15,6 +15,7 @@ import { AuthContext } from "../../../contexts/AuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "../../../hooks/useApi";
 import { notifications } from "@mantine/notifications";
+import { IconMoodCheck } from "@tabler/icons-react";
 
 interface CreateServerModalProps {
   opened: boolean;
@@ -89,15 +90,23 @@ export const CreateServerModal = ({ opened, onClose }: CreateServerModalProps) =
       className="text-bold"
       centered
       radius="md"
+      size="lg"
     >
-      <Paper radius="md" p="xl" withBorder>
+      <Paper
+        radius="md"
+        p="xl"
+        withBorder
+        className="bg-gray-50"
+      >
         <Center>
           <Text size="lg" fw={500} className="">
             Your Adventure Begins Here
           </Text>
+          <IconMoodCheck size={48} className="ml-3" />
         </Center>
-        <form onSubmit={handleCreateServer} className="mt-10">
+        <form onSubmit={handleCreateServer} className="mt-5">
           <Stack>
+          
             <TextInput
               required
               label="Server Name"

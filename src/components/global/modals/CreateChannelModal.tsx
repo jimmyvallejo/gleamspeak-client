@@ -35,7 +35,6 @@ export function CreateChannelModal({
   const auth = useContext(AuthContext);
   const api = useApi();
 
-
   const queryClient = useQueryClient();
 
   const form = useForm({
@@ -155,17 +154,22 @@ export function CreateChannelModal({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={isText? "Create Text Channel" : "Create Voice Channel"}
+      title={isText ? "Create Text Channel" : "Create Voice Channel"}
       className="text-bold"
       centered
+      radius="md"
+      size="lg"
     >
-      <Paper radius="md" p="xl">
+      <Paper radius="md" p="xl" withBorder className="bg-gray-50">
         <Center>
           <Text size="lg" fw={500} className="">
-            Set name and select language
+            Set Name and Select Language
           </Text>
         </Center>
-        <form onSubmit={isText ? handleCreateTextChannel: handleCreateVoiceChannel} className="mt-10">
+        <form
+          onSubmit={isText ? handleCreateTextChannel : handleCreateVoiceChannel}
+          className="mt-10"
+        >
           <Stack>
             <TextInput
               required
