@@ -25,9 +25,9 @@ import {
 } from "@tabler/icons-react";
 
 import { AuthContext } from "../../../contexts/AuthContext";
-import { ServerContext } from "../../../contexts/ServerContext";
 import { useApi } from "../../../hooks/useApi";
 import { useWebSocket } from "../../../hooks/useWebsocket";
+import { useServer } from "../../../hooks/useServer";
 import { copyToClipboard } from "../../../utils/copy";
 import { CreateChannelModal } from "../modals/CreateChannelModal";
 import { DeleteTextChannelModal } from "../modals/DeleteTextChanModal";
@@ -79,7 +79,7 @@ const Server = ({ icon: Icon, onClick, active }: NavbarChannelProps) => {
 
 export const Channels = () => {
   const auth = useContext(AuthContext);
-  const server = useContext(ServerContext);
+  const {server} = useServer()
   const [opened, { open, close }] = useDisclosure(false);
   const [openedDelete, { open: openDeleteChannel, close: closeDeleteChannel }] =
     useDisclosure(false);
@@ -98,31 +98,31 @@ export const Channels = () => {
   const queryClient = useQueryClient();
 
   const fetchUserTextChannels = async () => {
-    const response = await api.get(`/v1/channels/${server?.serverID}`);
+    const response = await api.get(`/v1/channels/${server?.server_id}`);
     return response.data;
   };
 
   const fetchUserVoiceChannels = async () => {
-    const response = await api.get(`/v1/channels/voice/${server?.serverID}`);
+    const response = await api.get(`/v1/channels/voice/${server?.server_id}`);
     return response.data;
   };
 
   const { data: text, error: textError } = useQuery({
-    queryKey: ["userTextChannels", server?.serverID],
+    queryKey: ["userTextChannels", server?.server_id],
     queryFn: fetchUserTextChannels,
     staleTime: Infinity,
     gcTime: Infinity,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    enabled: !!auth?.user && !!server?.serverID,
+    enabled: !!auth?.user && !!server?.server_id,
   });
 
   const { data: voice, error: voiceError } = useQuery({
-    queryKey: ["userVoiceChannels", server?.serverID],
+    queryKey: ["userVoiceChannels", server?.server_id],
     queryFn: fetchUserVoiceChannels,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    enabled: !!auth?.user && !!server?.serverID,
+    enabled: !!auth?.user && !!server?.server_id,
   });
 
   const deleteTextChannelMutation = useMutation({
@@ -159,7 +159,7 @@ export const Channels = () => {
   useEffect(() => {
     setTextActive(null);
     setVoiceActive(null);
-  }, [server?.serverID]);
+  }, [server?.server_id]);
 
   const handleTextChannel = (index: number, id: string) => {
     setTextActive(index);
@@ -170,13 +170,13 @@ export const Channels = () => {
   const handleVoiceChannel = (channel: Channel, index: number) => {
     setVoiceActive(index);
     ws.setVoiceRoom(channel.channel_id);
-    ws.changeVoiceRoom(server?.serverID, channel.channel_id);
+    ws.changeVoiceRoom(server?.server_id, channel.channel_id);
     togglePlay();
   };
 
   const handleCopy = () => {
-    if (server?.serverCode) {
-      copyToClipboard(server.serverCode);
+    if (server) {
+      copyToClipboard(server?.invite_code);
       notifications.show({
         message: "Copied to clipboard",
         color: "green",
@@ -219,41 +219,45 @@ export const Channels = () => {
         {channels[0].value}
       </Accordion.Control>
       <Accordion.Panel className="w-full">
-        {text?.channels.map((channel: Channel, index: number) => (
-          <Group
-            key={channel?.channel_id}
-            className={`w-full items-center ${
-              textActive === index ? "bg-[#262626]" : ""
-            } rounded-md mt-2`}
-          >
-            <Link
-              className="no-underline text-inherit w-[75%]"
-              to={`/chat/${channel?.channel_id}`}
+        {text?.channels && text.channels.length > 0 ? (
+          text.channels.map((channel: Channel, index: number) => (
+            <Group
+              key={channel?.channel_id}
+              className={`w-full items-center ${
+                textActive === index ? "bg-[#262626]" : ""
+              } rounded-md mt-2`}
             >
-              <div
-                onClick={() => handleTextChannel(index, channel?.channel_id)}
-                className={`flex items-center   h-[2rem]`}
+              <Link
+                className="no-underline text-inherit w-[75%]"
+                to={`/chat/${channel?.channel_id}`}
               >
-                <p className="text-[17px] px-4 m-0">
-                  <span className="mr-2">#</span>
-                  {channel?.channel_name.slice(0, 10)}
-                </p>
-              </div>
-            </Link>
-            {auth?.user?.id === server?.ownerID && (
-              <IconTrash
-                className="cursor-pointer wiggle-hover"
-                size={16}
-                onClick={() =>
-                  handleOpenDeleteModal(
-                    channel?.channel_name,
-                    channel?.channel_id
-                  )
-                }
-              />
-            )}
-          </Group>
-        ))}
+                <div
+                  onClick={() => handleTextChannel(index, channel?.channel_id)}
+                  className={`flex items-center h-[2rem]`}
+                >
+                  <p className="text-[17px] px-4 m-0">
+                    <span className="mr-2">#</span>
+                    {channel?.channel_name.slice(0, 10)}
+                  </p>
+                </div>
+              </Link>
+              {auth?.user?.id === server?.owner_id && (
+                <IconTrash
+                  className="cursor-pointer wiggle-hover"
+                  size={16}
+                  onClick={() =>
+                    handleOpenDeleteModal(
+                      channel?.channel_name,
+                      channel?.channel_id
+                    )
+                  }
+                />
+              )}
+            </Group>
+          ))
+        ) : (
+          <p>Empty for now...</p>
+        )}
         {textError && (
           <p className="text-red-300">Text channels failed to load</p>
         )}
@@ -313,7 +317,7 @@ export const Channels = () => {
             </div>
           ))
         ) : (
-          <p>No voice channels available</p>
+          <p>Empty for now...</p>
         )}
         {voiceError && (
           <p className="text-red-300">Voice channels failed to load</p>
@@ -341,7 +345,7 @@ export const Channels = () => {
         <Center
           className="flex flex-col items-center w-full relative"
           style={{
-            backgroundImage: `url(${server?.serverBanner})`,
+            backgroundImage: `url(${server?.banner_url})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             minHeight: "150px",
@@ -349,27 +353,27 @@ export const Channels = () => {
         >
           <div
             className={`absolute inset-0 ${
-              server?.serverBanner ? "bg-black" : ""
+              server?.banner_url ? "bg-black" : ""
             } bg-opacity-50`}
           />{" "}
           <div className="relative z-10 text-white">
             {" "}
             <div className="flex items-center mb-2">
               <Tooltip
-                label={server?.serverName}
+                label={server?.server_name}
                 position="top"
                 transitionProps={{ duration: 0 }}
               >
                 <h3 className="text-xl font-bold min-w-[84%]">
                   Server:{" "}
-                  {server?.serverName
-                    ? server.serverName.length > 10
-                      ? server.serverName.slice(0, 10) + "..."
-                      : server.serverName
+                  {server?.server_name
+                    ? server.server_name.length > 10
+                      ? server.server_name.slice(0, 10) + "..."
+                      : server.server_name
                     : ""}
                 </h3>
               </Tooltip>
-              {auth?.user?.id === server?.ownerID && (
+              {auth?.user?.id === server?.owner_id && (
                 <div className="flex items-center">
                   <Tooltip
                     label={"Server Settings"}
@@ -380,7 +384,7 @@ export const Channels = () => {
                       size="1.3rem"
                       className="cursor-pointer hover:text-blue-300 active:text-blue-500 transition-colors ml-2"
                       onClick={() =>
-                        navigate(`/server-settings/${server?.serverID}`)
+                        navigate(`/server-settings/${server?.server_id}`)
                       }
                     />
                   </Tooltip>
@@ -388,7 +392,7 @@ export const Channels = () => {
               )}
             </div>
             <Group justify="space-between">
-              <Text>Code: {server?.serverCode}</Text>
+              <Text>Code: {server?.invite_code}</Text>
               <Tooltip
                 label={"Copy"}
                 position="right"
@@ -406,23 +410,25 @@ export const Channels = () => {
 
         <div className={classes.navbarMain}>
           <Divider variant="" className="w-[100%]" my="xs" />
-          <div className="flex items-center mr-6 h-[3rem]">
+          <div>
+          <div className="flex items-center mr-6 h-[3rem] justify-start w-full">
             <Server
               serverID={null}
               icon={IconMessage2}
               label="Create Channel"
               onClick={open}
             />
-            <h5 className="ml-1">Create Text Channel</h5>
+            <h5 className="ml-1">Create Text Channel </h5>
           </div>
-          <div className=" flex items-center mr-4 h-[3rem]">
+          <div className=" flex items-center mr-4 h-[3rem] w-full">
             <Server
               serverID={null}
               icon={IconHeadphones}
               label="Create Channel"
               onClick={openVoiceModal}
             />
-            <h5 className="ml-1">Create Voice Channel</h5>
+            <h5 className="ml-1">Create Voice Channel </h5>
+          </div>
           </div>
           <Accordion
             multiple
@@ -437,7 +443,7 @@ export const Channels = () => {
         </div>
       </nav>
       <CreateChannelModal
-        serverID={server?.serverID}
+        serverID={server?.server_id}
         opened={opened}
         onClose={() => {
           close();

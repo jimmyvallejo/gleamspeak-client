@@ -14,13 +14,13 @@ import {
 
 import { useContext } from "react";
 import { AuthContext } from "../../../contexts/AuthContext";
-import { ServerContext } from "../../../contexts/ServerContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "../../../hooks/useApi";
 import { notifications } from "@mantine/notifications";
 import { useNavigate } from "react-router-dom";
 import { DeleteServerModal } from "../modals/DeleteServerModal";
 import { useDisclosure } from "@mantine/hooks";
+import { useServer } from "../../../hooks/useServer";
 
 interface ServerSettingsFormProps extends PaperProps {
   serverID: string | undefined;
@@ -37,12 +37,12 @@ export const ServerSettingsForm = ({
   ...PaperProps
 }: ServerSettingsFormProps) => {
   const auth = useContext(AuthContext);
-  const server = useContext(ServerContext);
+  const server = useServer();
   const api = useApi();
   const queryClient = useQueryClient();
 
   const [opened, { open, close }] = useDisclosure(false);
-  
+
   const navigate = useNavigate();
 
   const form = useForm({
@@ -135,11 +135,7 @@ export const ServerSettingsForm = ({
   };
 
   const handleServerChange = () => {
-    server?.setServerID(null);
-    server?.setServerName(null);
-    server?.setServerCode(null);
-    server?.setOwnerID(null);
-    server?.setServerBanner(null);
+    server.setServer(null);
   };
 
   return (
@@ -200,7 +196,12 @@ export const ServerSettingsForm = ({
           {upperFirst("Delete Server")}
         </Button>
       </Group>
-      <DeleteServerModal serverName={serverName} handleDelete={handleDelete} opened={opened} onClose={close} />
+      <DeleteServerModal
+        serverName={serverName}
+        handleDelete={handleDelete}
+        opened={opened}
+        onClose={close}
+      />
     </Paper>
   );
 };

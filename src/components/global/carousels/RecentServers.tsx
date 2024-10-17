@@ -32,7 +32,6 @@ const Card = ({
   banner,
   serverName,
   owner,
-  // memberCount,
   description,
   user,
 }: CardProps) => {

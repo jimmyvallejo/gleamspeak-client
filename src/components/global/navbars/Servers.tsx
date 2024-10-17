@@ -11,12 +11,12 @@ import {
 
 import classes from "./Server.module.css";
 import { AuthContext } from "../../../contexts/AuthContext";
-import { ServerContext } from "../../../contexts/ServerContext";
 import { CreateServerModal } from "../modals/CreateServerModal";
 import { JoinServerModal } from "../modals/JoinServerModal";
 import { useApi } from "../../../hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
 import { useWebSocket } from "../../../hooks/useWebsocket";
+import { useServer } from "../../../hooks/useServer";
 import { useNavigate } from "react-router-dom";
 
 interface NavbarServerProps {
@@ -28,7 +28,7 @@ interface NavbarServerProps {
   active?: boolean;
 }
 
-type Server = {
+export type Server = {
   server_id: string;
   owner_id: string;
   server_name: string;
@@ -73,9 +73,9 @@ function ServerItem({
   );
 }
 
-export function Servers() {
+export const Servers = () => {
   const auth = useContext(AuthContext);
-  const servers = useContext(ServerContext);
+  const servers = useServer()
   const [
     createServerOpened,
     { open: openCreateServer, close: closeCreateServer },
@@ -112,11 +112,8 @@ export function Servers() {
   });
 
   const handleServerChange = (server: Server) => {
-    servers?.setServerID(server.server_id);
-    servers?.setServerName(server.server_name);
-    servers?.setServerCode(server.invite_code);
-    servers?.setOwnerID(server.owner_id);
-    servers?.setServerBanner(server.banner_url);
+    console.log(server)
+    servers.setServer(server)
     setChannelMessages([]);
     auth?.leaveCurrentVoiceChannel();
     navigate("/");
@@ -141,7 +138,7 @@ export function Servers() {
             image={server.icon_url ? server.icon_url : ""}
             label={server.server_name}
             serverID={server.server_id}
-            active={servers?.serverID === server.server_id}
+            active={servers.server?.server_id === server.server_id}
             onClick={() => {
               handleServerChange(server);
             }}

@@ -29,7 +29,7 @@ type WebSocketContextType = {
   setVoiceRoom: React.Dispatch<React.SetStateAction<string | null>>;
   changeChatRoom(): void;
   changeVoiceRoom(server: string | null | undefined, channel: string): void;
-  changeServer(server: string | null): void;
+  changeServer(server: string | null | undefined): void;
   sendMessage: (
     user: string | null | undefined,
     handle: string | null | undefined,

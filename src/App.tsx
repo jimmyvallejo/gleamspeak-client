@@ -8,18 +8,18 @@ import Login from "./pages/Login";
 import ProtectedIn from "./components/global/routes/ProtectedIn";
 import ProtectedServer from "./components/global/routes/ProtectedServer";
 import { AuthContext } from "./contexts/AuthContext";
-import { ServerContext } from "./contexts/ServerContext";
 import { Servers } from "./components/global/navbars/Servers";
 import { Chat } from "./pages/Chat";
 import Settings from "./pages/Settings";
 import ServerSettings from "./pages/ServerSettings";
 import { Channels } from "./components/global/navbars/Channels";
 import { HeaderSimple } from "./components/global/navbars/Header";
+import { useServer } from "./hooks/useServer";
 
 function App() {
   const { setColorScheme } = useMantineColorScheme();
   const auth = useContext(AuthContext);
-  const servers = useContext(ServerContext);
+  const { server } = useServer()
 
   useEffect(() => {
     setColorScheme("dark");
@@ -32,7 +32,7 @@ function App() {
         {auth?.user && (
           <>
             <Servers />
-            {servers?.serverID && <Channels />}
+            {server?.server_id && <Channels />}
           </>
         )}
         <div className="content">
@@ -51,7 +51,7 @@ function App() {
               <Route
                 element={
                   <ProtectedServer
-                    isOwner={auth?.user?.id === servers?.ownerID}
+                    isOwner={auth?.user?.id === server?.owner_id}
                     redirectPath="/"
                   />
                 }
