@@ -150,7 +150,7 @@ export const Channels = () => {
 
   useEffect(() => {
     if (voice) {
-      ws.setVoiceChannels(voice.channels);
+      ws.setVoiceChannels(voice?.channels);
     } else {
       console.error("Invalid voice channels data:", voice);
     }

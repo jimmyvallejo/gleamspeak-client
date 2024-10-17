@@ -19,14 +19,14 @@ export const useApi = (): AxiosInstance => {
   let failedQueue: QueueItem[] = [];
 
   const processQueue = (error: Error | null, token: string | null = null) => {
-    failedQueue.forEach(prom => {
+    failedQueue.forEach((prom) => {
       if (error) {
         prom.reject(error);
       } else {
         prom.resolve(token);
       }
     });
-    
+
     failedQueue = [];
   };
 
@@ -38,19 +38,23 @@ export const useApi = (): AxiosInstance => {
       if (error.response?.status === 401 && !originalRequest._retry) {
         if (isRefreshing) {
           return new Promise<unknown>((resolve, reject) => {
-            failedQueue.push({resolve, reject});
-          }).then(() => {
-            return api(originalRequest);
-          }).catch(err => {
-            return Promise.reject(err);
-          });
+            failedQueue.push({ resolve, reject });
+          })
+            .then(() => {
+              return api(originalRequest);
+            })
+            .catch((err) => {
+              return Promise.reject(err);
+            });
         }
 
         originalRequest._retry = true;
         isRefreshing = true;
 
         try {
-          const refreshResponse = await api.post<{ token: string }>("/v1/refresh");
+          const refreshResponse = await api.post<{ token: string }>(
+            "/v1/refresh"
+          );
           isRefreshing = false;
           processQueue(null, refreshResponse.data.token);
           return api(originalRequest);
